@@ -41,7 +41,7 @@ def login():
     return (json.dumps({'message': 'Invalid password'}), 400)
 
 if __name__ == "__main__":
-  app.run(host='0.0.0.0', port=9090, debug=True)
+  app.run(host='0.0.0.0', port=8888, debug=True)
   
   
   
