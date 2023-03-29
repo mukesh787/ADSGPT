@@ -3,6 +3,7 @@ import os
 from boto3.dynamodb.conditions import Key
 import json
 from datetime import datetime
+import uuid
 
 def dynamo_connect():
     AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
@@ -36,6 +37,44 @@ def get_user(email):
         KeyConditionExpression=Key('email').eq(email)
     )
     return response['Items']
+
+def create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name):
+    dynamodb = dynamo_connect()
+    campaign_table = dynamodb.Table("campaign")
+    campaign_id = str(uuid.uuid4())
+    response = campaign_table.put_item(
+        Item = {
+            'campaign_id': campaign_id,
+            'campaign_name': campaign_name,
+            'objective': objective,
+            'ads_platform': ads_platform,
+            'description': description,
+            'ads_format': ads_format,
+            'copies': copies
+        }
+    )
+    return campaign_id
+
+def create_ads(campaign_id, creatives):
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    ad_id = str(uuid.uuid4())
+    ads_table.put_item(
+        Item = {
+            'ad_id': ad_id,
+            'campaign_id': campaign_id,
+            'creatives': json.dumps(creatives)
+        }
+    )
+    
+def get_ads(campaign_id):
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    response = ads_table.query(
+        IndexName='campaign_id-index',
+        KeyConditionExpression=Key('campaign_id').eq(campaign_id)
+    )
+    return response
     
 def get_file_names(user_id):
     dynamodb = dynamo_connect()

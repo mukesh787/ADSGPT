@@ -15,14 +15,14 @@ def get_token_count(text):
 def use_key(api_key):
     openai.api_key = api_key
 
-def complete(messages, is_stream, temperature=0.0):
+def complete(prompt, temperature=0.0):
+    messages = [dict({"role": "user", "content": prompt})]
     kwargs = dict(
         model = 'gpt-3.5-turbo',
         max_tokens = 4000 - get_token_count(messages),
         temperature = temperature,
         messages = messages,
         n = 1,
-        stream = is_stream
     )
     response = openai.ChatCompletion.create(**kwargs)
     return response
@@ -54,3 +54,12 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
         return num_tokens
     else:
         raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}""")
+    
+def generate_image(prompt, resolution, n):
+    kwargs = dict(
+        prompt = prompt,
+        n = n,
+        size=resolution
+    )
+    response = openai.Image.create(**kwargs)
+    return response

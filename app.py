@@ -3,6 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
+from campaign import create_campaign, get_campaign_ads
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -39,6 +40,26 @@ def login():
             return (json.dumps({'message': 'Invalid password'}), 400)
         
     return (json.dumps({'message': 'Invalid password'}), 400)
+
+@app.route("/aiad/create_campaign", methods=['POST'])
+def campaign():
+    data = request.get_json()
+    objective = data['objective']
+    description = data['description']
+    ads_platform = data['ads_platform']
+    ads_format = data['ads_format']
+    copies = data['copies']
+    campaign_name = data['campaign_name']
+    create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name)
+    return (json.dumps({"status": ""}), 200)
+
+@app.route("/aiad/ads", methods=['GET'])
+def ads():
+    request_args = request.args
+    if request_args and 'campaign_id' in request_args:
+        campaign_id = request_args['campaign_id']
+    creatives = get_campaign_ads(campaign_id)
+    return (json.dumps({"message": creatives}), 200)
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
