@@ -55,15 +55,14 @@ def create_campaign(objective, description, ads_platform, ads_format, copies, ca
     )
     return campaign_id
 
-def create_ads(campaign_id, creatives):
+def create_ads(ad_id, campaign_id, creatives):
     dynamodb = dynamo_connect()
     ads_table = dynamodb.Table("ads")
-    ad_id = str(uuid.uuid4())
     ads_table.put_item(
         Item = {
             'ad_id': ad_id,
             'campaign_id': campaign_id,
-            'creatives': json.dumps(creatives)
+            'creatives': json.dumps(creatives),
         }
     )
     
@@ -72,6 +71,14 @@ def get_ads(campaign_id):
     ads_table = dynamodb.Table("ads")
     response = ads_table.query(
         IndexName='campaign_id-index',
+        KeyConditionExpression=Key('campaign_id').eq(campaign_id)
+    )
+    return response
+
+def get_campaign_details(campaign_id):
+    dynamodb = dynamo_connect()
+    campaign_table = dynamodb.Table("campaign")
+    response = campaign_table.query(
         KeyConditionExpression=Key('campaign_id').eq(campaign_id)
     )
     return response
