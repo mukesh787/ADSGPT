@@ -30,7 +30,7 @@ def create_campaign(objective, description, ads_platform, ads_format, copies, ca
                 response = model.create_ad_copies(context, ads['text'], 0.3)
                 text  = response['choices'][0]['message']['content']
                 
-                response = model.create_ad_copies(context, ads['description'], 0.3)
+                response = model.create_ad_copies(context, ads['description'], 0.5)
                 description  = response['choices'][0]['message']['content']
                 
                 images = item['images']
@@ -39,11 +39,10 @@ def create_campaign(objective, description, ads_platform, ads_format, copies, ca
                 
                 object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
                 s3_url = upload_image(object_name, url)
-                print("url is ", s3_url)
                 if url:
                     creatives = dict({"headline": headline, "text": text, "description": description, "url": s3_url})
                     dynamo.create_ads(ad_id, campaign_id, creatives)
-                    return campaign_id
+            return campaign_id
                 
 
 def upload_image(object_name, url):
