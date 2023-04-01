@@ -8,6 +8,7 @@ from yaml.loader import SafeLoader
 from PIL import Image
 import requests
 import uuid
+import ai
 
 def load_ads_config():
     with open('ads.yaml') as f:
@@ -51,7 +52,7 @@ def upload_image(object_name, url):
     return url
 
 def get_campaign_ads(campaign_id):
-    ads = dynamo.get_ads(campaign_id)
+    ads = dynamo.get_all_campaign_ads(campaign_id)
     campaigns = dynamo.get_campaign_details(campaign_id)
     result = []
     for ad in ads['Items']:
@@ -61,6 +62,37 @@ def get_campaign_ads(campaign_id):
                 result.append(ad)
                     
     return result
-                
+
+
+def update_ads(ad_id, data):
+    response = dynamo.get_ads(ad_id)
+    if len(response['Items']) > 0:
+        item = response['Items'][0]
+        campaign_id = item['campaign_id']
+        campaign = dynamo.get_campaign_details(campaign_id)
+        context = "Generate ads copies for " + campaign['ads_platform'] + " ad format is " + campaign['ads_format'] + " for the product " + campaign['campaign_name']
+        if 'headline' in data:
+            new_headline = data['headline']    
+            print("item is ", item)
+            creatives = json.loads(item['creatives'])
+            old_headline = creatives['headline']
+            response = model.regenerate_ad_copies(old_headline, new_headline, 27)
+            text  = response['choices'][0]['message']['content']
+            print("regenrated headline ", text)
+            creatives['headline'] = text
+            dynamo.create_ads(ad_id, campaign_id, creatives)
+        elif 'text' in data:
+            new_text = data['text']
+            creatives = json.loads(item['creatives'])
+            old_text = creatives['text']
+            response = model.regenerate_ad_copies(old_text, new_text, 125)
+            text  = response['choices'][0]['message']['content']
+            creatives['text'] = text
+            dynamo.create_ads(ad_id, campaign_id, creatives)
+        else:
+            print("regenerate url")
             
-            
+def get_ads_config(campaign):
+    config_yaml = load_ads_config()
+    config = filter(lambda config : config['Platform'] == campaign['ads_platform'] and config['Format'] == campaign['ads_format'], config_yaml)
+    return config

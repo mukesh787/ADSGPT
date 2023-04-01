@@ -3,7 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
-from campaign import create_campaign, get_campaign_ads
+from campaign import create_campaign, get_campaign_ads, update_ads
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -35,7 +35,7 @@ def login():
         pw_hash = item['password']
         is_valid = bcrypt.check_password_hash(pw_hash, password)
         if is_valid:
-            return (json.dumps({'success': 'succes'}), 200)
+            return (json.dumps({'success': 'success'}), 200)
         else:
             return (json.dumps({'message': 'Invalid password'}), 400)
         
@@ -63,6 +63,11 @@ def ads():
     creatives = get_campaign_ads(campaign_id)
     return (json.dumps({"message": creatives}), 200)
 
+@app.route("/aiad/update/ads", methods=['POST'])
+def regenerate_ads():
+    data = request.get_json()
+    ad_id = data.get('ad_id', '')
+    update_ads(ad_id, data)
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)

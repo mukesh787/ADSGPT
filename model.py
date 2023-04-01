@@ -24,8 +24,20 @@ def create_ad_copies(context, text, temperature):
         Question: {text}
         
         Answer:"""
-    print(prompt)
     response = ai.complete(prompt, temperature)
+    return response
+
+def regenerate_ad_copies(old_headline, new_headline, limit):
+    use_key(None)
+    prompt = f"""
+        {'I want you to act as ads copywriting expert,'}
+        
+        Based on your previous response, users wants few modifications on the ads copy, your previous response was {old_headline}
+        
+        Generate a new ad copy based on this instuction {new_headline}, but the generated copy should be with {limit}
+        
+        Answer:"""
+    response = ai.complete(prompt)
     return response
     
 
