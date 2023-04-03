@@ -70,7 +70,7 @@ def update_ads(ad_id, data):
         item = response['Items'][0]
         campaign_id = item['campaign_id']
         campaign = dynamo.get_campaign_details(campaign_id)
-        context = "Generate ads copies for " + campaign['ads_platform'] + " ad format is " + campaign['ads_format'] + " for the product " + campaign['campaign_name']
+        #context = "Generate ads copies for " + campaign['ads_platform'] + " ad format is " + campaign['ads_format'] + " for the product " + campaign['campaign_name']
         if 'headline' in data:
             new_headline = data['headline']
             print("item is ", item)
@@ -81,7 +81,7 @@ def update_ads(ad_id, data):
             print("regenrated headline ", text)
             creatives['headline'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
-            return json.dumps({"headline": text}, 200)
+            return (json.dumps({"headline": text}), 200)
         elif 'text' in data:
             new_text = data['text']
             creatives = json.loads(item['creatives'])
@@ -90,7 +90,7 @@ def update_ads(ad_id, data):
             text  = response['choices'][0]['message']['content']
             creatives['text'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
-            return json.dumps({"text": text})
+            return (json.dumps({"text": text}), 200)
         else:
             print("regenerate image url")
                         

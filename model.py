@@ -34,7 +34,7 @@ def regenerate_ad_copies(old_headline, new_headline, limit):
         
         Based on your previous response, users wants few modifications on the ads copy, your previous response was {old_headline}
         
-        Generate a new ad copy based on this instuction {new_headline}, but the generated copy should be with {limit}
+        Generate a new ad copy based on this instuction {new_headline}, but the generated copy should be within {limit} characters limit
         
         Answer:"""
     response = ai.complete(prompt)
