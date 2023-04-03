@@ -38,11 +38,11 @@ def get_user(email):
     )
     return response['Items']
 
-def create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name):
+def create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     campaign_id = str(uuid.uuid4())
-    response = campaign_table.put_item(
+    campaign_table.put_item(
         Item = {
             'campaign_id': campaign_id,
             'campaign_name': campaign_name,
@@ -50,7 +50,8 @@ def create_campaign(objective, description, ads_platform, ads_format, copies, ca
             'ads_platform': ads_platform,
             'description': description,
             'ads_format': ads_format,
-            'copies': copies
+            'copies': copies,
+            'urls': urls
         }
     )
     return campaign_id
@@ -88,6 +89,17 @@ def get_ads(ad_id):
     ads_table = dynamodb.Table("ads")
     response = ads_table.query(
         KeyConditionExpression=Key('ad_id').eq(ad_id)
+    )
+    return response
+
+def update_campaign(campaign_id, urls):
+    dynamodb = dynamo_connect()
+    campaign_table = dynamodb.Table("campaign")
+    response = campaign_table.update_item(
+        Key={'campaign_id': campaign_id},
+        AttributeUpdates = {
+            'images': urls
+        }
     )
     return response
 

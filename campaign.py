@@ -16,15 +16,15 @@ def load_ads_config():
         print(data)
     return data
 
-def create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name):
+def create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls):
     config_yaml = load_ads_config()
-    campaign_id = dynamo.create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name)
+    campaign_id = dynamo.create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls)
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
-            for i in range(0, copies):
+            for _ in range(0, copies):
                 ad_id = str(uuid.uuid4())
                 ads = item['ads']
-                context = "Generate ads copies for " + ads_platform + " ad format is " + ads_format + " for the product " + campaign_name
+                context = "Generate ad copies for " + ads_platform + " ad format is " + ads_format + " for the product " + campaign_name
                 response = model.create_ad_copies(context, ads['headline'], 0.3)
                 headline  = response['choices'][0]['message']['content']
                 
@@ -72,7 +72,7 @@ def update_ads(ad_id, data):
         campaign = dynamo.get_campaign_details(campaign_id)
         context = "Generate ads copies for " + campaign['ads_platform'] + " ad format is " + campaign['ads_format'] + " for the product " + campaign['campaign_name']
         if 'headline' in data:
-            new_headline = data['headline']    
+            new_headline = data['headline']
             print("item is ", item)
             creatives = json.loads(item['creatives'])
             old_headline = creatives['headline']
@@ -90,9 +90,20 @@ def update_ads(ad_id, data):
             creatives['text'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
         else:
-            print("regenerate url")
+            print("regenerate image url")
             
 def get_ads_config(campaign):
     config_yaml = load_ads_config()
     config = filter(lambda config : config['Platform'] == campaign['ads_platform'] and config['Format'] == campaign['ads_format'], config_yaml)
     return config
+
+def upload_files(campaign_id, files):
+    urls = []
+    for file in files:
+        print("each file", file.filename)
+        object_name = campaign_id + '_' + file.filename.lower().replace(" ", "")
+        url = s3.upload_to_s3(object_name, file)
+        print("url is ", url)
+        urls.append(url)
+    return urls
+    

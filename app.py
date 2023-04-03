@@ -3,7 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
-from campaign import create_campaign, get_campaign_ads, update_ads
+from campaign import create_campaign, get_campaign_ads, update_ads, upload_files
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -14,7 +14,7 @@ if __name__ != '__main__':
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
         
-@app.route("/aiad/signup", methods=['POST'])
+@app.route("/adsgpt/signup", methods=['POST'])
 def signup():
     data = request.get_json()
     user_name = data['username']
@@ -24,7 +24,7 @@ def signup():
     dynamo.save_user(user_name, email, pw_hash)
     return (json.dumps({'success': 'succes'}), 200)
 
-@app.route("/aiad/login", methods=['POST'])
+@app.route("/adsgpt/login", methods=['POST'])
 def login():
     data = request.get_json()
     email = data['email']
@@ -42,7 +42,7 @@ def login():
     return (json.dumps({'message': 'Invalid password'}), 400)
 
 
-@app.route("/aiad/create_campaign", methods=['POST'])
+@app.route("/adsgpt/campaign", methods=['POST'])
 def campaign():
     data = request.get_json()
     objective = data['objective']
@@ -51,11 +51,23 @@ def campaign():
     ads_format = data['ads_format']
     copies = data['copies']
     campaign_name = data['campaign_name']
-    campaign_id = create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name)
+    urls = data['urls']
+    campaign_id = create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls)
     return (json.dumps({"campaign_id": campaign_id}), 200)
 
 
-@app.route("/aiad/campaign/ads", methods=['GET'])
+@app.route("/adsgpt/campaign/images", methods=['POST'])
+def update_campaign():
+    files = request.files.getlist("file")
+    print(files)
+    data = dict(request.form)
+    print(len(files))
+    campaign_id = data.get('campaign_id')
+    urls = upload_files(campaign_id, files)
+    return (json.dumps({"urls": urls}), 200)
+    
+
+@app.route("/adsgpt/campaign/ads", methods=['GET'])
 def ads():
     request_args = request.args
     if request_args and 'campaign_id' in request_args:
@@ -63,7 +75,8 @@ def ads():
     creatives = get_campaign_ads(campaign_id)
     return (json.dumps({"message": creatives}), 200)
 
-@app.route("/aiad/update/ads", methods=['POST'])
+
+@app.route("/adsgpt/update/ads", methods=['POST'])
 def regenerate_ads():
     data = request.get_json()
     ad_id = data.get('ad_id', '')
