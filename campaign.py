@@ -81,6 +81,7 @@ def update_ads(ad_id, data):
             print("regenrated headline ", text)
             creatives['headline'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
+            return json.dumps({"headline": text}, 200)
         elif 'text' in data:
             new_text = data['text']
             creatives = json.loads(item['creatives'])
@@ -89,19 +90,21 @@ def update_ads(ad_id, data):
             text  = response['choices'][0]['message']['content']
             creatives['text'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
+            return json.dumps({"text": text})
         else:
             print("regenerate image url")
-            
+                        
 def get_ads_config(campaign):
     config_yaml = load_ads_config()
     config = filter(lambda config : config['Platform'] == campaign['ads_platform'] and config['Format'] == campaign['ads_format'], config_yaml)
     return config
 
-def upload_files(campaign_id, files):
+def upload_files(files):
     urls = []
     for file in files:
         print("each file", file.filename)
-        object_name = campaign_id + '_' + file.filename.lower().replace(" ", "")
+        prefix = str(uuid.uuid4())
+        object_name = prefix + "_" + file.filename.lower().replace(" ", "")
         url = s3.upload_to_s3(object_name, file)
         print("url is ", url)
         urls.append(url)

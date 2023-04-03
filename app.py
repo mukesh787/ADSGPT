@@ -59,11 +59,7 @@ def campaign():
 @app.route("/adsgpt/campaign/images", methods=['POST'])
 def update_campaign():
     files = request.files.getlist("file")
-    print(files)
-    data = dict(request.form)
-    print(len(files))
-    campaign_id = data.get('campaign_id')
-    urls = upload_files(campaign_id, files)
+    urls = upload_files(files)
     return (json.dumps({"urls": urls}), 200)
     
 
@@ -80,7 +76,7 @@ def ads():
 def regenerate_ads():
     data = request.get_json()
     ad_id = data.get('ad_id', '')
-    update_ads(ad_id, data)
+    return update_ads(ad_id, data)
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
