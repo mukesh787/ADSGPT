@@ -129,4 +129,10 @@ def square_image(path):
     
 def get_user_campaigns(user_id):
     response = dynamo.fetch_user_campaigns(user_id)
+    for item in  response['Items']:
+        ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+        item['ads'] = ads['Items']
+        
+    print("Itemas are", response['Items'])
     return response['Items']
+        
