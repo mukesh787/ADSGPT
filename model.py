@@ -46,3 +46,7 @@ def generate_image(prompt, resolution, n):
     response = ai.generate_image(prompt, resolution, n)
     print(response)
     return response
+
+def edit_image(path):
+    use_key(None)
+    return ai.generate_variation(path)

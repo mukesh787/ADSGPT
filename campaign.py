@@ -1,4 +1,3 @@
-
 import s3
 import model
 import dynamo
@@ -9,6 +8,10 @@ from PIL import Image
 import requests
 import uuid
 import ai
+import os
+from werkzeug.utils import secure_filename
+from PIL import Image
+import numpy as np
 
 def load_ads_config():
     with open('ads.yaml') as f:
@@ -73,12 +76,10 @@ def update_ads(ad_id, data):
         #context = "Generate ads copies for " + campaign['ads_platform'] + " ad format is " + campaign['ads_format'] + " for the product " + campaign['campaign_name']
         if 'headline' in data:
             new_headline = data['headline']
-            print("item is ", item)
             creatives = json.loads(item['creatives'])
             old_headline = creatives['headline']
             response = model.regenerate_ad_copies(old_headline, new_headline, 27)
             text  = response['choices'][0]['message']['content']
-            print("regenrated headline ", text)
             creatives['headline'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
             return (json.dumps({"headline": text}), 200)
@@ -102,11 +103,26 @@ def get_ads_config(campaign):
 def upload_files(files):
     urls = []
     for file in files:
-        print("each file", file.filename)
         prefix = str(uuid.uuid4())
         object_name = prefix + "_" + file.filename.lower().replace(" ", "")
         url = s3.upload_to_s3(object_name, file)
-        print("url is ", url)
         urls.append(url)
     return urls
-    
+
+def regenerate_images(file, ad_id):
+    temp_path = os.getenv("TEMP_PATH")
+    filename = secure_filename(file.filename)
+    path = os.path.join("/", temp_path, filename)
+    file.save(path)
+    square_image(path)
+    url = model.edit_image(path)
+    prefix = str(uuid.uuid4())
+    object_name = prefix + "_" +file.filename.lower().replace(" ", "")
+    s3_url = upload_image(object_name, url)
+    return s3_url
+
+def square_image(path):
+    im = Image.open(path)
+    sqrWidth = np.ceil(np.sqrt(im.size[0]*im.size[1])).astype(int)
+    im_resize = im.resize((sqrWidth, sqrWidth))
+    im_resize.save(path)
