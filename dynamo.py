@@ -21,29 +21,33 @@ def dynamo_connect():
 def save_user(user_name, email, pw_hash):
     dynamodb = dynamo_connect()
     users_table = dynamodb.Table("users")
-    response = users_table.put_item(
+    user_id = str(uuid.uuid4())
+    users_table.put_item(
         Item = {
+            "user-id": user_id,
             "user_name": user_name,
             "email": email,
             "password": pw_hash
         }
     )
-    return response
+    return user_id
 
 def get_user(email):
     dynamodb = dynamo_connect()
     users_table = dynamodb.Table("users")
     response = users_table.query(
+        IndexName="email-index",
         KeyConditionExpression=Key('email').eq(email)
     )
     return response['Items']
 
-def create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls):
+def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     campaign_id = str(uuid.uuid4())
     campaign_table.put_item(
         Item = {
+            'user_id': user_id,
             'campaign_id': campaign_id,
             'campaign_name': campaign_name,
             'objective': objective,
@@ -103,3 +107,11 @@ def update_campaign(campaign_id, urls):
     )
     return response
 
+def fetch_user_campaigns(user_id):
+    dynamodb = dynamo_connect()
+    campaign_table = dynamodb.Table("campaign")
+    response = campaign_table.query(
+        IndexName="user_id-index",
+        KeyConditionExpression=Key('user_id').eq(user_id)
+    )
+    return response

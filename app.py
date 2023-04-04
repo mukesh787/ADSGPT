@@ -3,7 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
-from campaign import create_campaign, get_campaign_ads, update_ads, upload_files, regenerate_images
+from campaign import create_campaign, get_campaign_ads, update_ads, upload_files, regenerate_images, get_user_campaigns
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -21,8 +21,8 @@ def signup():
     email = data['email']
     password = data['password']
     pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-    dynamo.save_user(user_name, email, pw_hash)
-    return (json.dumps({'success': 'succes'}), 200)
+    user_id = dynamo.save_user(user_name, email, pw_hash)
+    return (json.dumps({'user_id': user_id, 'email': email, 'user_name': user_name}), 200)
 
 @app.route("/adsgpt/login", methods=['POST'])
 def login():
@@ -35,7 +35,7 @@ def login():
         pw_hash = item['password']
         is_valid = bcrypt.check_password_hash(pw_hash, password)
         if is_valid:
-            return (json.dumps({'success': 'success'}), 200)
+            return (json.dumps({'user_id': item['user-id'], 'email': item['email'], 'user_name': item['user_name']}), 200)
         else:
             return (json.dumps({'message': 'Invalid password'}), 400)
         
@@ -45,6 +45,7 @@ def login():
 @app.route("/adsgpt/campaign", methods=['POST'])
 def campaign():
     data = request.get_json()
+    user_id = data['user_id']
     objective = data['objective']
     description = data['description']
     ads_platform = data['ads_platform']
@@ -52,9 +53,8 @@ def campaign():
     copies = data['copies']
     campaign_name = data['campaign_name']
     urls = data['urls']
-    campaign_id = create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls)
+    campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls)
     return (json.dumps({"campaign_id": campaign_id}), 200)
-
 
 @app.route("/adsgpt/campaign/images", methods=['POST'])
 def update_campaign():
@@ -78,6 +78,7 @@ def regenerate_ads():
     ad_id = data.get('ad_id', '')
     return update_ads(ad_id, data)
 
+
 @app.route("/adsgpt/regenerate/image", methods=['POST'])
 def regenerate_image():
     file = request.files['file']
@@ -85,6 +86,15 @@ def regenerate_image():
     ad_id = data.get('ad_id')
     url =  regenerate_images(file, ad_id)
     return (json.dumps({"url": url}), 200)
+
+
+@app.route("/adsgpt/users/campaign", methods=['GET'])
+def campaigns():
+    request_args = request.args
+    if request_args and 'user_id' in request_args:
+        user_id = request_args['user_id']
+    campaigns = get_user_campaigns(user_id)
+    return (json.dumps({"campaigns": campaigns}), 200)
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)

@@ -19,9 +19,9 @@ def load_ads_config():
         print(data)
     return data
 
-def create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls):
+def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls):
     config_yaml = load_ads_config()
-    campaign_id = dynamo.create_campaign(objective, description, ads_platform, ads_format, copies, campaign_name, urls)
+    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls)
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
             for _ in range(0, copies):
@@ -126,3 +126,7 @@ def square_image(path):
     sqrWidth = np.ceil(np.sqrt(im.size[0]*im.size[1])).astype(int)
     im_resize = im.resize((sqrWidth, sqrWidth))
     im_resize.save(path)
+    
+def get_user_campaigns(user_id):
+    response = dynamo.fetch_user_campaigns(user_id)
+    return response['Items']
