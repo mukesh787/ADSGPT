@@ -103,3 +103,17 @@ def update_campaign(campaign_id, urls):
     )
     return response
 
+def get_creatives_ads(ad_id):
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    response = ads_table.query(
+        KeyConditionExpression=Key('ad_id').eq(ad_id)
+    )
+    if 'Items' in response:
+        items = response['Items']
+        if len(items) > 0:
+            ad = items[0]
+            creatives = ad.get('creatives')
+            return creatives
+    return None
+    

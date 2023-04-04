@@ -3,7 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
-from campaign import create_campaign, get_campaign_ads, update_ads, upload_files, regenerate_images
+from campaign import create_campaign, get_campaign_ads, update_ads, upload_files, regenerate_images, export_ad
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -85,6 +85,16 @@ def regenerate_image():
     ad_id = data.get('ad_id')
     url =  regenerate_images(file, ad_id)
     return (json.dumps({"url": url}), 200)
+
+@app.route("/adsgpt/export/zip", methods=['POST'])
+def export():
+    request_args = request.args
+    if request_args and 'ad_id' in request_args:
+       ad_id = request_args['ad_id']
+    export_ad(ad_id)
+    return (json.dumps({"Success": "success"}), 200)
+    
+    
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)

@@ -12,6 +12,8 @@ import os
 from werkzeug.utils import secure_filename
 from PIL import Image
 import numpy as np
+import zipfile
+import csv
 
 def load_ads_config():
     with open('ads.yaml') as f:
@@ -126,3 +128,19 @@ def square_image(path):
     sqrWidth = np.ceil(np.sqrt(im.size[0]*im.size[1])).astype(int)
     im_resize = im.resize((sqrWidth, sqrWidth))
     im_resize.save(path)
+    
+def export_ad(ad_id):
+    creatives= dynamo.get_creatives_ads(ad_id)
+    print(creatives)
+    
+    creatives_dict = json.loads(creatives)
+
+    with open("all_creatives.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        for key in creatives_dict:
+            writer.writerow([key, creatives_dict[key]])
+
+    with zipfile.ZipFile("creatives.zip", "w", compression=zipfile.ZIP_DEFLATED) as zipf:
+        zipf.write("all_creatives.csv")
+    
+    os.remove("all_creatives.csv")
