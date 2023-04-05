@@ -17,7 +17,7 @@ import shutil
 import urllib.request
 import zipfile
 import datetime
-
+import random
 
 def load_ads_config():
     with open('ads.yaml') as f:
@@ -49,11 +49,17 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                 
                 object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
                 s3_url = upload_image(object_name, url)
+                cta_text = cta()
                 if url:
-                    creatives = dict({"headline": headline, "text": text, "description": description, "url": s3_url})
+                    creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
                     dynamo.create_ads(ad_id, campaign_id, creatives)
             return campaign_id
                 
+
+def cta():
+    cta_list = ['Book Now', 'Contact Us', 'Use App', 'Play Game', 'Shop Now', 'Sign Up', 'Watch Video']
+    cta_text = random.choice(cta_list)
+    return cta_text
 
 def upload_image(object_name, url):
     image = requests.get(url, stream=True)
@@ -78,8 +84,6 @@ def update_ads(ad_id, data):
     if len(response['Items']) > 0:
         item = response['Items'][0]
         campaign_id = item['campaign_id']
-        campaign = dynamo.get_campaign_details(campaign_id)
-        #context = "Generate ads copies for " + campaign['ads_platform'] + " ad format is " + campaign['ads_format'] + " for the product " + campaign['campaign_name']
         if 'headline' in data:
             new_headline = data['headline']
             creatives = json.loads(item['creatives'])
@@ -88,7 +92,7 @@ def update_ads(ad_id, data):
             text  = response['choices'][0]['message']['content']
             creatives['headline'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
-            return (json.dumps({"headline": text}), 200)
+            return (json.dumps({"headline": text, "old_headline": old_headline}), 200)
         elif 'text' in data:
             new_text = data['text']
             creatives = json.loads(item['creatives'])
@@ -97,9 +101,10 @@ def update_ads(ad_id, data):
             text  = response['choices'][0]['message']['content']
             creatives['text'] = text
             dynamo.create_ads(ad_id, campaign_id, creatives)
-            return (json.dumps({"text": text}), 200)
+            return (json.dumps({"text": text, "old_text": old_text}), 200)
         else:
             print("regenerate image url")
+            
                         
 def get_ads_config(campaign):
     config_yaml = load_ads_config()
@@ -116,16 +121,23 @@ def upload_files(files):
     return urls
 
 def regenerate_images(file, ad_id):
-    temp_path = os.getenv("TEMP_PATH")
-    filename = secure_filename(file.filename)
-    path = os.path.join("/", temp_path, filename)
-    file.save(path)
-    square_image(path)
-    url = model.edit_image(path)
-    prefix = str(uuid.uuid4())
-    object_name = prefix + "_" +file.filename.lower().replace(" ", "")
-    s3_url = upload_image(object_name, url)
-    return s3_url
+    response = dynamo.get_ads(ad_id)
+    if len(response['Items']) > 0:
+        item = response['Items'][0]
+        creatives = json.loads(item['creatives'])
+        campaign_id = item['campaign_id']
+        temp_path = os.getenv("TEMP_PATH")
+        filename = secure_filename(file.filename)
+        path = os.path.join("/", temp_path, filename)
+        file.save(path)
+        square_image(path)
+        url = model.edit_image(path)
+        prefix = str(uuid.uuid4())
+        object_name = prefix + "_" +file.filename.lower().replace(" ", "")
+        s3_url = upload_image(object_name, url)
+        creatives['url'] = s3_url
+        dynamo.create_ads(ad_id, campaign_id, creatives)
+        return s3_url
 
 def square_image(path):
     im = Image.open(path)
@@ -139,13 +151,10 @@ def get_user_campaigns(user_id):
         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
         item['ads'] = ads['Items']
         
-    print("Itemas are", response['Items'])
     return response['Items']
         
 def export_ad(ad_id):
     creatives = dynamo.get_creatives_ads(ad_id)
-    print(creatives)
-    
     creatives_dict = json.loads(creatives)
     TEMP_PATH = os.getenv("TEMP_PATH")
     os.makedirs(TEMP_PATH, exist_ok=True)
@@ -168,12 +177,11 @@ def export_ad(ad_id):
 
     # create zip file
     today = datetime.datetime.now().strftime("%Y-%m-%d")
-    campaign_id=dynamo.get_campaign_id(ad_id)
-    campaign_name= dynamo.get_campaign_name(campaign_id)                
+    campaign_id =dynamo.get_campaign_id(ad_id)
+    campaign_name = dynamo.get_campaign_name(campaign_id)
     zip_name = f"{campaign_name}_{today}.zip"
     zip_path = os.path.join(os.getcwd(), zip_name)
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
-        # create folder inside zip file
         folder_name = "creatives"
         zipf.write(csv_path, os.path.join(folder_name, os.path.basename(csv_path)))
         zipf.write(image_path, os.path.join(folder_name, os.path.basename(image_path)))

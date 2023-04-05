@@ -29,6 +29,5 @@ def upload_zip_to_s3(file_name):
     url = client.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': file_name},
            ExpiresIn=3600  # URL will expire in 1 hour
            )
-    print(url)
     return url
     

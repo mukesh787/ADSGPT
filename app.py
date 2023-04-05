@@ -13,6 +13,7 @@ if __name__ != '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
+    
         
 @app.route("/adsgpt/signup", methods=['POST'])
 def signup():
@@ -23,6 +24,7 @@ def signup():
     pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
     user_id = dynamo.save_user(user_name, email, pw_hash)
     return (json.dumps({'user_id': user_id, 'email': email, 'user_name': user_name}), 200)
+
 
 @app.route("/adsgpt/login", methods=['POST'])
 def login():
@@ -62,8 +64,8 @@ def update_campaign():
     files = request.files.getlist("file")
     urls = upload_files(files)
     return (json.dumps({"urls": urls}), 200)
-    
 
+    
 @app.route("/adsgpt/campaign/ads", methods=['GET'])
 def ads():
     request_args = request.args
@@ -97,6 +99,7 @@ def campaigns():
     campaigns = get_user_campaigns(user_id)
     return (json.dumps({"campaigns": campaigns}), 200)
 
+
 @app.route("/adsgpt/campaign", methods=['GET'])
 def campaign_details():
     request_args = request.args
@@ -105,16 +108,16 @@ def campaign_details():
     response = dynamo.get_campaign_details(campaign_id)
     return json.dumps({"campaign": response['Items'][0]})
 
+
 @app.route("/adsgpt/export/zip", methods=['POST'])
 def export():
     request_args = request.args
     if request_args and 'ad_id' in request_args:
        ad_id = request_args['ad_id']
-    url=export_ad(ad_id)
-    return (json.dumps({"Success": url}), 200)
+    url = export_ad(ad_id)
+    return (json.dumps({"url": url}), 200)
     
     
-
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
   
