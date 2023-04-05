@@ -116,4 +116,35 @@ def get_creatives_ads(ad_id):
             creatives = ad.get('creatives')
             return creatives
     return None
+
+def get_campaign_id(ad_id):
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    response = ads_table.query(
+        KeyConditionExpression=Key('ad_id').eq(ad_id)
+    )
+    if 'Items' in response:
+        items = response['Items']
+        if len(items) > 0:
+            ad = items[0]
+            campaign_id = ad.get('campaign_id')
+            return campaign_id
+    return None
+
+
+def get_campaign_name(campaign_id):
+    dynamodb = dynamo_connect()
+    campaign_table = dynamodb.Table("campaign")
+    response = campaign_table.query(
+        KeyConditionExpression=Key('campaign_id').eq(campaign_id)
+    )
+    if 'Items' in response:
+        items = response['Items']
+        if len(items) > 0:
+            campaign = items[0]
+            campaign_name = campaign.get('campaign_name')
+            return campaign_name
+    return None
     
+    
+
