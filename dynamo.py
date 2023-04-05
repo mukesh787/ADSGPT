@@ -67,7 +67,7 @@ def create_ads(ad_id, campaign_id, creatives):
         Item = {
             'ad_id': ad_id,
             'campaign_id': campaign_id,
-            'creatives': json.dumps(creatives),
+            'creatives': json.dumps(creatives)
         }
     )
     

@@ -29,13 +29,13 @@ def login():
     data = request.get_json()
     email = data['email']
     password = data['password']
-    items = dynamo.get_user(email)
-    if len(items) > 0:
-        item = items[0]
-        pw_hash = item['password']
+    users = dynamo.get_user(email)
+    if len(users) > 0:
+        user = users[0]
+        pw_hash = user['password']
         is_valid = bcrypt.check_password_hash(pw_hash, password)
         if is_valid:
-            return (json.dumps({'user_id': item['user-id'], 'email': item['email'], 'user_name': item['user_name']}), 200)
+            return (json.dumps({'user_id': user['user-id'], 'email': user['email'], 'user_name': user['user_name']}), 200)
         else:
             return (json.dumps({'message': 'Invalid password'}), 400)
         
@@ -55,6 +55,7 @@ def campaign():
     urls = data['urls']
     campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls)
     return (json.dumps({"campaign_id": campaign_id}), 200)
+
 
 @app.route("/adsgpt/campaign/images", methods=['POST'])
 def update_campaign():
@@ -95,6 +96,14 @@ def campaigns():
         user_id = request_args['user_id']
     campaigns = get_user_campaigns(user_id)
     return (json.dumps({"campaigns": campaigns}), 200)
+
+@app.route("/adsgpt/campaign", methods=['GET'])
+def campaign_details():
+    request_args = request.args
+    if request_args and 'campaign_id' in request_args:
+        campaign_id = request_args['campaign_id']
+    response = dynamo.get_campaign_details(campaign_id)
+    return json.dumps({"campaign": response['Items'][0]})
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
