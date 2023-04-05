@@ -160,7 +160,7 @@ def export_ad(ad_id):
     # create zip file
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     campaign_id=dynamo.get_campaign_id(ad_id)
-    campaign_name= dynamo.get_campaign_name(campaign_id)
+    campaign_name= dynamo.get_campaign_name(campaign_id)                
     zip_name = f"{campaign_name}_{today}.zip"
     zip_path = os.path.join(os.getcwd(), zip_name)
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
@@ -173,3 +173,5 @@ def export_ad(ad_id):
     shutil.rmtree(TEMP_PATH)
 
     print(f"Successfully created zip file: {zip_path}")
+    zip_url = s3.upload_zip_to_s3(zip_name)
+    return zip_url

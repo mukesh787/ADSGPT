@@ -91,8 +91,8 @@ def export():
     request_args = request.args
     if request_args and 'ad_id' in request_args:
        ad_id = request_args['ad_id']
-    export_ad(ad_id)
-    return (json.dumps({"Success": "success"}), 200)
+    url=export_ad(ad_id)
+    return (json.dumps({"Success": url}), 200)
     
     
 
