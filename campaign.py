@@ -8,10 +8,16 @@ from PIL import Image
 import requests
 import uuid
 import ai
-import os
 from werkzeug.utils import secure_filename
 from PIL import Image
 import numpy as np
+import csv
+import os
+import shutil
+import urllib.request
+import zipfile
+import datetime
+
 
 def load_ads_config():
     with open('ads.yaml') as f:
@@ -136,3 +142,43 @@ def get_user_campaigns(user_id):
     print("Itemas are", response['Items'])
     return response['Items']
         
+def export_ad(ad_id):
+    creatives = dynamo.get_creatives_ads(ad_id)
+    print(creatives)
+    
+    creatives_dict = json.loads(creatives)
+    TEMP_PATH = os.getenv("TEMP_PATH")
+    os.makedirs(TEMP_PATH, exist_ok=True)
+
+    csv_path = os.path.join(TEMP_PATH, "creatives.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["headline", "text", "description", "url"])
+        writer.writerow([
+            creatives_dict["headline"].replace('"', ''),
+            creatives_dict["text"].replace('"', ''),
+            creatives_dict["description"].replace('"', ''),
+            creatives_dict["url"].replace('"', '')
+        ])
+
+    # download image
+    image_url = creatives_dict["url"]
+    image_path = os.path.join(TEMP_PATH, os.path.basename(image_url))
+    urllib.request.urlretrieve(image_url, image_path)
+
+    # create zip file
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    campaign_id=dynamo.get_campaign_id(ad_id)
+    campaign_name= dynamo.get_campaign_name(campaign_id)
+    zip_name = f"{campaign_name}_{today}.zip"
+    zip_path = os.path.join(os.getcwd(), zip_name)
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
+        # create folder inside zip file
+        folder_name = "creatives"
+        zipf.write(csv_path, os.path.join(folder_name, os.path.basename(csv_path)))
+        zipf.write(image_path, os.path.join(folder_name, os.path.basename(image_path)))
+
+    # delete temporary folder
+    shutil.rmtree(TEMP_PATH)
+
+    print(f"Successfully created zip file: {zip_path}")
