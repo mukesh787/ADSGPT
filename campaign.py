@@ -188,6 +188,7 @@ def export_ads(ad_ids):
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     campaign_id = dynamo.get_campaign_id(ad_ids[0])
     campaign_name = dynamo.get_campaign_name(campaign_id)
+    campaign_name = campaign_name.replace(' ', '_')
     zip_name = f"{campaign_name}_{today}.zip"
     zip_path = os.path.join(os.getcwd(), zip_name)
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
