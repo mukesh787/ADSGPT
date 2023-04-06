@@ -22,24 +22,6 @@ def upload_to_s3(object_name, file_obj):
     response = "https://{0}.s3.ap-south-1.amazonaws.com/{1}".format(S3_BUCKET, object_name)
     return response
 
-# def upload_zip_to_s3(file_name):
-#     client = s3_client()
-#     S3_BUCKET = os.getenv("S3_BUCKET")
-#     client.upload_file(file_name, S3_BUCKET, file_name)
-#     url = client.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': file_name},
-#            ExpiresIn=3600  # URL will expire in 1 hour
-#            )
-#     return url
-
-# def upload_zip_to_s3(file_name):
-#     client = s3_client()
-#     S3_BUCKET = os.getenv("S3_BUCKET")
-#     client.upload_file(file_name, S3_BUCKET, file_name)
-#     url = client.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': file_name},
-#            ExpiresIn=3600  # URL will expire in 1 hour
-#            )
-#     # return url.replace('%20', '_')
-
 def upload_zip_to_s3(file_name):
     client = s3_client()
     S3_BUCKET = os.getenv("S3_BUCKET")
