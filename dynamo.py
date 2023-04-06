@@ -157,6 +157,24 @@ def get_campaign_name(campaign_id):
             campaign_name = campaign.get('campaign_name')
             return campaign_name
     return None
+
+def get_all_ad_id(campaign_id):
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    response = ads_table.query(
+        IndexName='campaign_id-index',
+        KeyConditionExpression=Key('campaign_id').eq(campaign_id)
+    )
+    ad_ids = [item['ad_id'] for item in response['Items']]
+    while 'LastEvaluatedKey' in response:
+        response = ads_table.query(
+            IndexName='campaign_id-index',
+            KeyConditionExpression=Key('campaign_id').eq(campaign_id),
+            ExclusiveStartKey=response['LastEvaluatedKey']
+        )
+        ad_ids.extend([item['ad_id'] for item in response['Items']])
+    return ad_ids
+
     
     
 

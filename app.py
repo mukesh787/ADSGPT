@@ -3,7 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
-from campaign import create_campaign, get_campaign_ads, update_ads, upload_files, regenerate_images, get_user_campaigns, export_ad
+from campaign import create_campaign, get_campaign_ads, update_ads, upload_files, regenerate_images, get_user_campaigns, export_ads
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -113,10 +113,14 @@ def campaign_details():
 def export():
     request_args = request.args
     if request_args and 'ad_id' in request_args:
-       ad_id = request_args['ad_id']
-    url = export_ad(ad_id)
+       ad_ids = [request_args['ad_id']]
+    if request_args and 'campaign_id' in request_args:
+       campaign_id = request_args['campaign_id']
+       ad_ids= dynamo.get_all_ad_id(campaign_id)
+       print(ad_ids)
+       
+    url = export_ads(ad_ids)
     return (json.dumps({"url": url}), 200)
-    
     
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
