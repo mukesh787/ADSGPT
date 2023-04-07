@@ -1,6 +1,6 @@
 ads_config:
   -
-    Platform: Facebook
+    Platform: Meta/Instagram
     Format: NewsFeed
     ads:
       headline: "Generate ad copy for facebook news feed headline within 27 characters"
