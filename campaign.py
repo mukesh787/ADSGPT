@@ -25,9 +25,10 @@ def load_ads_config():
         print(data)
     return data
 
-def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls):
+def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls, company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url):
     config_yaml = load_ads_config()
-    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls)
+    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls,
+                                         company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
             for _ in range(0, copies):

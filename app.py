@@ -43,7 +43,6 @@ def login():
         
     return (json.dumps({'message': 'Invalid password'}), 400)
 
-
 @app.route("/adsgpt/campaign", methods=['POST'])
 def campaign():
     data = request.get_json()
@@ -55,7 +54,17 @@ def campaign():
     copies = data['copies']
     campaign_name = data['campaign_name']
     urls = data['urls']
-    campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls)
+    company_name= data['company_name']
+    advertising_goal = data['advertising_goal']
+    ad_tone= data['ad_tone']
+    image_variations_count = data['image_variations_count']
+    landing_page_url = data['landing_page_url']
+    if 'logo_url' in data:
+        logo_url = data['logo_url']
+    else:
+        logo_url = None
+    campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls,
+                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url , logo_url)
     return (json.dumps({"campaign_id": campaign_id}), 200)
 
 
@@ -121,9 +130,17 @@ def export():
        
     url = export_ads(ad_ids)
     return (json.dumps({"url": url}), 200)
+
+
+@app.route("/adsgpt/upload/logo", methods=['POST'])
+def upload_logo():
+    file = [request.files["file"]]
+    url = upload_files(file)
+    return (json.dumps({"url": url}), 200)
     
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
+  
   
   
   
