@@ -19,6 +19,8 @@ import zipfile
 import datetime
 import random
 
+cta_list = ["Apply now", "Book now", "Call Now", "Contact us", "Download", "Learn more", "Get quote", "Order now", "Shop now", "Sign up", "Watch more"]
+
 def load_ads_config():
     with open('ads.yaml') as f:
         data = yaml.load(f, Loader=SafeLoader)
@@ -26,23 +28,25 @@ def load_ads_config():
     return data
 
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls, company_name, advertising_goal, 
-                    ad_tone, image_variations_count, landing_page_url, logo_url):
+                    ads_tone, image_variations_count, landing_page_url, logo_url):
     config_yaml = load_ads_config()
     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls,
-                                         company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
+                                         company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url)
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
             for _ in range(0, copies):
                 ad_id = str(uuid.uuid4())
                 ads = item['ads']
-                context = "Generate ad copies for " + ads_platform + " ad format is " + ads_format + " for the product " + campaign_name
-                response = model.create_ad_copies(context, ads['headline'], 0.3)
+                prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
+                response = model.complete(prompt, 0.3)
                 headline  = response['choices'][0]['message']['content']
                 
-                response = model.create_ad_copies(context, ads['text'], 0.3)
+                prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
+                response = model.complete(prompt, 0.3)
                 text  = response['choices'][0]['message']['content']
                 
-                response = model.create_ad_copies(context, ads['description'], 0.5)
+                prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['description'])
+                response = model.complete(prompt, 0.5)
                 description  = response['choices'][0]['message']['content']
                 
                 images = item['images']
@@ -51,17 +55,23 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                 
                 object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
                 s3_url = upload_image(object_name, url)
-                cta_text = cta()
+                cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
                 if url:
                     creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
                     dynamo.create_ads(ad_id, campaign_id, creatives)
             return campaign_id
                 
-
-def cta():
-    cta_list = ['Book Now', 'Contact Us', 'Use App', 'Play Game', 'Shop Now', 'Sign Up', 'Watch Video']
-    cta_text = random.choice(cta_list)
-    return cta_text
+    
+def get_cta(company_name, advertising_goal, objective, description, cta_list):
+    query = "Please pick up a suitable cta from the list and only return a single cta name in the output and do not add any additional text"
+    prompt = model.resolve_cta_prompt(company_name, advertising_goal, objective, description, cta_list, query)
+    response = model.complete(prompt, 0.0)
+    cta_text = response['choices'][0]['message']['content']
+    print("CTA text is ", cta_text)
+    for cta in cta_list:
+        if cta_text.find(cta) > 0:
+            return cta
+    return random.choice(cta_list)
 
 def upload_image(object_name, url):
     image = requests.get(url, stream=True)

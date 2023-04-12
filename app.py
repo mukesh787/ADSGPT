@@ -53,17 +53,14 @@ def campaign():
     ads_format = data['ads_format']
     copies = data['copies']
     campaign_name = data['campaign_name']
-    urls = data['urls']
+    campaign_urls = data.get('campaign_urls',[])
     company_name= data['company_name']
     advertising_goal = data['advertising_goal']
     ad_tone= data['ad_tone']
     image_variations_count = data['image_variations_count']
     landing_page_url = data['landing_page_url']
-    if 'logo_url' in data:
-        logo_url = data['logo_url']
-    else:
-        logo_url = None
-    campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls,
+    logo_url = data.get('logo_url',"")
+    campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
                     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
     return (json.dumps({"campaign_id": campaign_id}), 200)
 
@@ -72,7 +69,9 @@ def campaign():
 def update_campaign():
     files = request.files.getlist("file")
     urls = upload_files(files)
-    return (json.dumps({"urls": urls}), 200)
+    file = [request.files["logo"]]
+    logo_url = upload_files(file)
+    return (json.dumps({"campaign_urls": urls, "logo_url": logo_url}), 200)
 
     
 @app.route("/adsgpt/campaign/ads", methods=['GET'])
@@ -131,12 +130,6 @@ def export():
     url = export_ads(ad_ids)
     return (json.dumps({"url": url}), 200)
 
-
-@app.route("/adsgpt/upload/logo", methods=['POST'])
-def upload_logo():
-    file = [request.files["file"]]
-    url = upload_files(file)
-    return (json.dumps({"url": url}), 200)
     
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
