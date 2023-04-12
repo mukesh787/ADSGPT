@@ -64,7 +64,7 @@ def campaign():
     else:
         logo_url = None
     campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls,
-                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url , logo_url)
+                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
     return (json.dumps({"campaign_id": campaign_id}), 200)
 
 
