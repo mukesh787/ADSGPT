@@ -32,6 +32,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
     config_yaml = load_ads_config()
     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
                                          company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url)
+    
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
             for _ in range(0, copies):
@@ -59,7 +60,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                 if url:
                     creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
                     dynamo.create_ads(ad_id, campaign_id, creatives)
-            return campaign_id
+    return campaign_id
                 
     
 def get_cta(company_name, advertising_goal, objective, description, cta_list):
