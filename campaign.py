@@ -60,7 +60,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                 if url:
                     creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
                     dynamo.create_ads(ad_id, campaign_id, creatives)
-                    return campaign_id
+            return campaign_id
                 
     
 def get_cta(company_name, advertising_goal, objective, description, cta_list):
