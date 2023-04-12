@@ -27,10 +27,10 @@ def load_ads_config():
         print(data)
     return data
 
-def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls, company_name, advertising_goal, 
+def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls, company_name, advertising_goal, 
                     ads_tone, image_variations_count, landing_page_url, logo_url):
     config_yaml = load_ads_config()
-    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls,
+    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
                                          company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url)
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
@@ -80,6 +80,8 @@ def upload_image(object_name, url):
 
 def get_campaign_ads(campaign_id):
     ads = dynamo.get_all_campaign_ads(campaign_id)
+    print("ads")
+    print(ads)
     campaigns = dynamo.get_campaign_details(campaign_id)
     result = []
     for ad in ads['Items']:
@@ -161,6 +163,7 @@ def get_user_campaigns(user_id):
     response = dynamo.fetch_user_campaigns(user_id)
     for item in  response['Items']:
         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+        
         item['ads'] = ads['Items']
         
     return response['Items']

@@ -41,7 +41,7 @@ def get_user(email):
     )
     return response['Items']
 
-def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, urls,
+def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
                     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
@@ -56,7 +56,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
             'description': description,
             'ads_format': ads_format,
             'copies': copies,
-            'urls': urls,
+            'campaign_urls': campaign_urls,
             'company_name': company_name,
             'advertising_goal' :advertising_goal,
             'ad_tone':ad_tone,
