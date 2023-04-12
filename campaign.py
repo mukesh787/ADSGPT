@@ -41,17 +41,17 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                 prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
                 response = model.complete(prompt, 0.3)
                 headline  = response['choices'][0]['message']['content']
-                
+                                                                
                 prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
                 response = model.complete(prompt, 0.3)
                 text  = response['choices'][0]['message']['content']
-                
+                                    
                 prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['description'])
                 response = model.complete(prompt, 0.5)
                 description  = response['choices'][0]['message']['content']
                 
                 images = item['images']
-                response = model.generate_image(campaign_name, images['resolution'], images['count'])
+                response = model.generate_image(advertising_goal, images['resolution'], images['count'])
                 url = response['data'][0]['url']
                 
                 object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"

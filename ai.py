@@ -19,7 +19,6 @@ def complete(prompt, temperature=0.0):
     messages = [dict({"role": "user", "content": prompt})]
     kwargs = dict(
         model = 'gpt-3.5-turbo',
-        max_tokens = 4000 - get_token_count(messages),
         temperature = temperature,
         messages = messages,
         n = 1,
