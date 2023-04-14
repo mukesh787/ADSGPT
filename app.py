@@ -93,9 +93,8 @@ def regenerate_ad():
 @app.route("/adsgpt/regenerate/image", methods=['POST'])
 def regenerate_image():
     file = request.files['file']
-    data = dict(request.form)
-    ad_id = data.get('ad_id')
-    url =  regenerate_images(file, ad_id)
+    url =  regenerate_images(file)
+    print("response")
     return (json.dumps({"url": url}), 200)
 
 @app.route("/adsgpt/update/ads", methods=['POST'])

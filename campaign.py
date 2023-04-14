@@ -132,12 +132,7 @@ def upload_files(files):
         urls.append(url)
     return urls
 
-def regenerate_images(file, ad_id):
-    response = dynamo.get_ads(ad_id)
-    if len(response['Items']) > 0:
-        item = response['Items'][0]
-        creatives = json.loads(item['creatives'])
-        campaign_id = item['campaign_id']
+def regenerate_images(file):
         temp_path = os.getenv("TEMP_PATH")
         filename = secure_filename(file.filename)
         path = os.path.join("/", temp_path, filename)
@@ -147,7 +142,6 @@ def regenerate_images(file, ad_id):
         prefix = str(uuid.uuid4())
         object_name = prefix + "_" +file.filename.lower().replace(" ", "")
         s3_url = upload_image(object_name, url)
-        creatives['url'] = s3_url
         return s3_url
 
 def square_image(path):
