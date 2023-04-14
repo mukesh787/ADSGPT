@@ -94,11 +94,10 @@ def get_campaign_ads(campaign_id):
     return result
 
 
-def update_ads(ad_id, data):
+def regenerate_ads(ad_id, data):
     response = dynamo.get_ads(ad_id)
     if len(response['Items']) > 0:
         item = response['Items'][0]
-        campaign_id = item['campaign_id']
         if 'headline' in data:
             new_headline = data['headline']
             creatives = json.loads(item['creatives'])
@@ -106,7 +105,6 @@ def update_ads(ad_id, data):
             response = model.regenerate_ad_copies(old_headline, new_headline, 27)
             text  = response['choices'][0]['message']['content']
             creatives['headline'] = text
-            dynamo.create_ads(ad_id, campaign_id, creatives)
             return (json.dumps({"headline": text, "old_headline": old_headline}), 200)
         elif 'text' in data:
             new_text = data['text']
@@ -115,7 +113,6 @@ def update_ads(ad_id, data):
             response = model.regenerate_ad_copies(old_text, new_text, 125)
             text  = response['choices'][0]['message']['content']
             creatives['text'] = text
-            dynamo.create_ads(ad_id, campaign_id, creatives)
             return (json.dumps({"text": text, "old_text": old_text}), 200)
         else:
             print("regenerate image url")
@@ -151,7 +148,6 @@ def regenerate_images(file, ad_id):
         object_name = prefix + "_" +file.filename.lower().replace(" ", "")
         s3_url = upload_image(object_name, url)
         creatives['url'] = s3_url
-        dynamo.create_ads(ad_id, campaign_id, creatives)
         return s3_url
 
 def square_image(path):
@@ -216,3 +212,20 @@ def export_ads(ad_ids):
     print(f"Successfully created zip file: {zip_path}")
     zip_url = s3.upload_zip_to_s3(zip_name)
     return zip_url
+
+def update_ads(ad_id, data):
+    response = dynamo.get_ads(ad_id)
+    if len(response['Items']) > 0:
+        item = response['Items'][0]
+        campaign_id = item['campaign_id']
+        new_text = data['text']
+        new_description = data['description']
+        new_url= data['url']
+        new_cta=data['cta']
+        creatives = json.loads(item['creatives'])
+        creatives['text'] = new_text
+        creatives['description'] = new_description
+        creatives['url'] = new_url
+        creatives['cta'] = new_cta
+        dynamo.create_ads(ad_id, campaign_id, creatives)
+        return (json.dumps({"message": "updated successfully"}), 200)

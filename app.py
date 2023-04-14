@@ -3,7 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
-from campaign import create_campaign, get_campaign_ads, update_ads, upload_files, regenerate_images, get_user_campaigns, export_ads
+from campaign import create_campaign, get_campaign_ads, regenerate_ads, upload_files, regenerate_images, get_user_campaigns, export_ads, update_ads
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -83,11 +83,11 @@ def ads():
     return (json.dumps({"message": creatives}), 200)
 
 
-@app.route("/adsgpt/update/ads", methods=['POST'])
-def regenerate_ads():
+@app.route("/adsgpt/regenerate/ads", methods=['POST'])
+def regenerate_ad():
     data = request.get_json()
     ad_id = data.get('ad_id', '')
-    return update_ads(ad_id, data)
+    return regenerate_ads(ad_id, data)
 
 
 @app.route("/adsgpt/regenerate/image", methods=['POST'])
@@ -97,6 +97,12 @@ def regenerate_image():
     ad_id = data.get('ad_id')
     url =  regenerate_images(file, ad_id)
     return (json.dumps({"url": url}), 200)
+
+@app.route("/adsgpt/update/ads", methods=['POST'])
+def update_ad():
+    data = request.get_json()
+    ad_id = data.get('ad_id', '')
+    return update_ads(ad_id, data)
 
 
 @app.route("/adsgpt/users/campaign", methods=['GET'])
