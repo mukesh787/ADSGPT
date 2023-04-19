@@ -64,6 +64,13 @@ def campaign():
                     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
     return (json.dumps({"campaign_id": campaign_id}), 200)
 
+@app.route("/adsgpt/campaign", methods=['PUT'])
+def update_campaign_attr():
+    data = request.get_json()
+    campaign_id = data['campaign_id']
+    campaign_name = data['campaign_name']
+    dynamo.update_campaign(campaign_id, {"campaign_name": campaign_name})
+    return (json.dumps({"status": "success"}), 200)
 
 @app.route("/adsgpt/campaign/images", methods=['POST'])
 def update_campaign():
@@ -81,7 +88,7 @@ def ads():
         campaign_id = request_args['campaign_id']
     creatives = get_campaign_ads(campaign_id)
     return (json.dumps({"message": creatives}), 200)
-
+    
 
 @app.route("/adsgpt/regenerate/ads", methods=['POST'])
 def regenerate_ad():
@@ -103,7 +110,6 @@ def update_ad():
     ad_id = data.get('ad_id', '')
     return update_ads(ad_id, data)
 
-
 @app.route("/adsgpt/users/campaign", methods=['GET'])
 def campaigns():
     request_args = request.args
@@ -120,7 +126,6 @@ def campaign_details():
         campaign_id = request_args['campaign_id']
     response = dynamo.get_campaign_details(campaign_id)
     return json.dumps({"campaign": response['Items'][0]})
-
 
 @app.route("/adsgpt/export/zip", methods=['POST'])
 def export():

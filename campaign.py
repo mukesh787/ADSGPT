@@ -27,7 +27,8 @@ def load_ads_config():
         print(data)
     return data
 
-def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls, company_name, advertising_goal, 
+def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
+                    campaign_urls, company_name, advertising_goal, 
                     ads_tone, image_variations_count, landing_page_url, logo_url):
     config_yaml = load_ads_config()
     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
@@ -61,8 +62,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                     creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
                     dynamo.create_ads(ad_id, campaign_id, creatives)
             return campaign_id
-                
-    
+
 def get_cta(company_name, advertising_goal, objective, description, cta_list):
     query = "Please pick up a suitable cta from the list and only return a single cta name in the output and do not add any additional text"
     prompt = model.resolve_cta_prompt(company_name, advertising_goal, objective, description, cta_list, query)

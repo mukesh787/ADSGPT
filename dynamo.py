@@ -104,14 +104,12 @@ def get_ads(ad_id):
     )
     return response
 
-def update_campaign(campaign_id, urls):
+def update_campaign(campaign_id, object):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     response = campaign_table.update_item(
         Key={'campaign_id': campaign_id},
-        AttributeUpdates = {
-            'images': urls
-        }
+        AttributeUpdates = object
     )
     return response
 
