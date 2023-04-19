@@ -2,7 +2,7 @@ import boto3
 import os
 from boto3.dynamodb.conditions import Key
 import json
-from datetime import datetime
+import datetime
 import uuid
 
 def dynamo_connect():
@@ -62,8 +62,9 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
             'ad_tone':ad_tone,
             'image_variations_count':image_variations_count,
             'landing_page_url' : landing_page_url,
-            'logo_url':logo_url
-            
+            'logo_url':logo_url,
+            'created_ts':datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_ts':datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') 
         }
     )
     return campaign_id
