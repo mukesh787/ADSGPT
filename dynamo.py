@@ -114,7 +114,7 @@ def update_campaign(campaign_id, campaign_name):
         ExpressionAttributeNames={'#cn': 'campaign_name'},
         ExpressionAttributeValues={':cn': campaign_name}
     )
-    return response['Items'][0]
+    return response
 
 def fetch_user_campaigns(user_id):
     dynamodb = dynamo_connect()
