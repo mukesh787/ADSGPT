@@ -186,12 +186,13 @@ def get_all_ad_id(campaign_id):
         ad_ids.extend([item['ad_id'] for item in response['Items']])
     return ad_ids
 
-def delete_ad(ad_id):
+def delete_ad(ad_id, campaign_id):
     dynamodb = dynamo_connect()
     ads_table = dynamodb.Table("ads")
     ads_table.delete_item(
         Key={
-            "ad-id": ad_id,          
+            "ad_id": ad_id,
+            "campaign_id":campaign_id          
         }
     )
     

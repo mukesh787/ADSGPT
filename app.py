@@ -77,7 +77,8 @@ def update_campaign_attr():
 def delete_campaign_ads():
     data = request.get_json()
     ad_id= data['ad_id']
-    dynamo.delete_ad(ad_id)
+    campaign_id=data['campaign_id']
+    dynamo.delete_ad(ad_id, campaign_id)
     return (json.dumps({"status": "success"}), 200)
     
     
