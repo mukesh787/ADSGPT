@@ -70,7 +70,8 @@ def update_campaign_attr():
     campaign_id = data['campaign_id']
     campaign_name = data['campaign_name']
     dynamo.update_campaign(campaign_id, {"campaign_name": campaign_name})
-    return (json.dumps({"status": "success"}), 200)
+    updated_campaign= dynamo.get_campaign_details(campaign_id)
+    return (json.dumps({"status": updated_campaign}), 200)
 
 @app.route("/adsgpt/campaign/images", methods=['POST'])
 def update_campaign():
