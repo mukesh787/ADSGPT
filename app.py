@@ -4,6 +4,7 @@ from flask_cors import CORS, cross_origin
 import logging
 import dynamo
 from campaign import create_campaign, get_campaign_ads, regenerate_ads, upload_files, regenerate_images, get_user_campaigns, export_ads, update_ads
+import datetime
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -71,7 +72,11 @@ def update_campaign_attr():
     campaign_name = data['campaign_name']
     dynamo.update_campaign(campaign_id, campaign_name)
     response= dynamo.get_campaign_details(campaign_id)
-    return (json.dumps({"status": response['Items']}), 200)
+    for item in  response['Items']:
+        ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+        item['ads'] = ads['Items']  
+    sorted_items = sorted(response['Items'], key=lambda x: datetime.datetime.strptime(x.get('updated_ts', '1970-01-01 00:00:00'), '%Y-%m-%d %H:%M:%S'), reverse=True)
+    return (json.dumps({"campaign": sorted_items}), 200)
 
 @app.route("/adsgpt/delete/ad", methods=['DELETE'])
 def delete_campaign_ads():
