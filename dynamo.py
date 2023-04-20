@@ -105,14 +105,16 @@ def get_ads(ad_id):
     )
     return response
 
-def update_campaign(campaign_id, object):
+def update_campaign(campaign_id, campaign_name):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     response = campaign_table.update_item(
-        Key={'campaign_id': campaign_id},
-        AttributeUpdates = object
+        Key={'campaign_id': campaign_id},        
+        UpdateExpression='SET #cn = :cn',
+        ExpressionAttributeNames={'#cn': 'campaign_name'},
+        ExpressionAttributeValues={':cn': campaign_name}
     )
-    return response
+    return response['Items'][0]
 
 def fetch_user_campaigns(user_id):
     dynamodb = dynamo_connect()

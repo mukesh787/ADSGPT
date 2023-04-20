@@ -69,7 +69,7 @@ def update_campaign_attr():
     data = request.get_json()
     campaign_id = data['campaign_id']
     campaign_name = data['campaign_name']
-    dynamo.update_campaign(campaign_id, {"campaign_name": campaign_name})
+    dynamo.update_campaign(campaign_id, campaign_name)
     campaign= dynamo.get_campaign_details(campaign_id)
     return (json.dumps({"status": campaign}), 200)
 
