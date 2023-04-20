@@ -37,7 +37,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
             for _ in range(0, copies):
-                ad_id = str(uuid.uuid4())
+                
                 ads = item['ads']
                 prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
                 response = model.complete(prompt, 0.3)
@@ -48,19 +48,24 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                 text  = response['choices'][0]['message']['content']
                                     
                 prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['description'])
+                
                 response = model.complete(prompt, 0.5)
                 description  = response['choices'][0]['message']['content']
-                
-                images = item['images']
-                response = model.generate_image(advertising_goal, images['resolution'], images['count'])
-                url = response['data'][0]['url']
-                
-                object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
-                s3_url = upload_image(object_name, url)
                 cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
-                if url:
-                    creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
-                    dynamo.create_ads(ad_id, campaign_id, creatives)
+                
+                for _ in range(0, image_variations_count):
+                    ad_id = str(uuid.uuid4())
+                    
+                    images = item['images']
+                    response = model.generate_image(advertising_goal, images['resolution'], images['count'])
+                    url = response['data'][0]['url']
+                
+                    object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
+                    s3_url = upload_image(object_name, url)
+                
+                    if url:
+                        creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
+                        dynamo.create_ads(ad_id, campaign_id, creatives)
             return campaign_id
 
 def get_cta(company_name, advertising_goal, objective, description, cta_list):
