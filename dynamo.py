@@ -105,14 +105,18 @@ def get_ads(ad_id):
     )
     return response
 
-def update_campaign(campaign_id, object):
+def update_campaign(campaign_id, campaign_name):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     response = campaign_table.update_item(
         Key={'campaign_id': campaign_id},
-        AttributeUpdates = object
+        AttributeUpdates = {
+            'campaign_name': {'Value': campaign_name, 'Action': 'PUT'}
+        }
     )
-    return response
+
+    
+
 
 def fetch_user_campaigns(user_id):
     dynamodb = dynamo_connect()
@@ -181,6 +185,18 @@ def get_all_ad_id(campaign_id):
         )
         ad_ids.extend([item['ad_id'] for item in response['Items']])
     return ad_ids
+
+def delete_ad(ad_id):
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    ads_table.delete_item(
+        Key={
+            "ad-id": ad_id,          
+        }
+    )
+    
+    
+    
 
     
     
