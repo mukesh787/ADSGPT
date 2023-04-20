@@ -70,9 +70,17 @@ def update_campaign_attr():
     campaign_id = data['campaign_id']
     campaign_name = data['campaign_name']
     dynamo.update_campaign(campaign_id, campaign_name)
-    campaign= dynamo.get_campaign_details(campaign_id)
-    return (json.dumps({"status": campaign}), 200)
+    response= dynamo.get_campaign_details(campaign_id)
+    return (json.dumps({"status": response['Items']}), 200)
 
+@app.route("/adsgpt/delete/ad", methods=['DELETE'])
+def delete_campaign_ads():
+    data = request.get_json()
+    ad_id= data['ad_id']
+    dynamo.delete_ad(ad_id)
+    return (json.dumps({"status": "success"}), 200)
+    
+    
 @app.route("/adsgpt/campaign/images", methods=['POST'])
 def update_campaign():
     files = request.files.getlist("file")
