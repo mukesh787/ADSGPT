@@ -219,12 +219,12 @@ def update_ads(ad_id, data):
         item = response['Items'][0]
         campaign_id = item['campaign_id']
         new_text = data['text']
-        new_description = data['description']
+        headline = data['headline']
         new_url= data['url']
         new_cta=data['cta']
         creatives = json.loads(item['creatives'])
         creatives['text'] = new_text
-        creatives['description'] = new_description
+        creatives['headline'] = headline
         creatives['url'] = new_url
         creatives['cta'] = new_cta
         dynamo.create_ads(ad_id, campaign_id, creatives)

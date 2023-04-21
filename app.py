@@ -95,7 +95,6 @@ def update_campaign():
     logo_url = upload_files([file]) if file is not None else []
     return (json.dumps({"campaign_urls": urls, "logo_url": logo_url}), 200)
 
-    
 @app.route("/adsgpt/campaign/ads", methods=['GET'])
 def ads():
     request_args = request.args
