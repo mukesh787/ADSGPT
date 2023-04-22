@@ -14,10 +14,11 @@ import numpy as np
 import csv
 import os
 import shutil
-import urllib.request
 import zipfile
 import datetime
 import random
+import re
+import urllib.request
 
 cta_list = ["Apply now", "Book now", "Call Now", "Contact us", "Download", "Learn more", "Get quote", "Order now", "Shop now", "Sign up", "Watch more"]
 
@@ -36,38 +37,54 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
     
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
-            for _ in range(0, copies):
-                
+            for _ in range(0, copies):             
                 ads = item['ads']
-                prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
-                response = model.complete(prompt, 0.3)
-                headline  = response['choices'][0]['message']['content']
-                                                                
-                prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
-                response = model.complete(prompt, 0.3)
-                text  = response['choices'][0]['message']['content']
-                                    
-                prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, ads['description'])
+  
+                headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
                 
-                response = model.complete(prompt, 0.5)
-                description  = response['choices'][0]['message']['content']
+                print("description count ", headline, len(headline))
+                
+                text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
+                
+                print("text count ", text, len(text))
+                
                 cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
                 
                 for _ in range(0, image_variations_count):
                     ad_id = str(uuid.uuid4())
-                    
                     images = item['images']
-                    response = model.generate_image(advertising_goal, images['resolution'], images['count'])
-                    url = response['data'][0]['url']
-                
+                    
+                    print(campaign_urls)
+                    if len(campaign_urls) > 0:
+                        print("campaign urls ", campaign_urls)
+                        file_name = str(uuid.uuid4()) + ".png"
+                        filename = secure_filename(file_name)
+                        path = os.path.join("/", os.getenv("TEMP_PATH"), filename)
+                        response = urllib.request.urlretrieve(campaign_urls[0], path)
+                        path = response[0]
+                        square_image(path)
+                        url = edit_image(path)
+                    else:
+                        response = model.generate_image(advertising_goal, images['resolution'], images['count'])
+                        url = response['data'][0]['url']
+
+                    print("url is ", url)
                     object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
                     s3_url = upload_image(object_name, url)
-                
-                    if url:
-                        creatives = dict({"headline": headline, "text": text, "description": description, "cta": cta_text, "url": s3_url})
+                    
+                    if s3_url:
+                        creatives = dict({"text": text, "headline": headline, "cta": cta_text, "url": s3_url})
                         dynamo.create_ads(ad_id, campaign_id, creatives)
             return campaign_id
 
+def generate_copy(company_name, advertising_goal, objective, description, ads_tone, query):
+    prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, query)
+    print("Text Prompt size ", len(prompt))
+    response = model.complete(prompt, 0.3)
+    copy = response['choices'][0]['message']['content'].replace('"', '')
+    copy = re.sub(' +', ' ', copy)
+    return copy
+                
 def get_cta(company_name, advertising_goal, objective, description, cta_list):
     query = "Please pick up a suitable cta from the list and only return a single cta name in the output and do not add any additional text"
     prompt = model.resolve_cta_prompt(company_name, advertising_goal, objective, description, cta_list, query)
@@ -138,16 +155,21 @@ def upload_files(files):
     return urls
 
 def regenerate_images(file):
-        temp_path = os.getenv("TEMP_PATH")
-        filename = secure_filename(file.filename)
-        path = os.path.join("/", temp_path, filename)
-        file.save(path)
-        square_image(path)
-        url = model.edit_image(path)
-        prefix = str(uuid.uuid4())
-        object_name = prefix + "_" +file.filename.lower().replace(" ", "")
-        s3_url = upload_image(object_name, url)
-        return s3_url
+    print("file is ", file)
+    temp_path = os.getenv("TEMP_PATH")
+    new_file_name = file.filename.split(".")[0] + ".png"
+    filename = secure_filename(new_file_name)
+    path = os.path.join("/", temp_path, filename)
+    file.save(path)
+    square_image(path)
+    edit_image(path)
+    
+def edit_image(path):
+    url = model.edit_image(path)
+    prefix = str(uuid.uuid4())
+    object_name = prefix + ".png"
+    s3_url = upload_image(object_name, url)
+    return s3_url
 
 def square_image(path):
     im = Image.open(path)
@@ -167,7 +189,6 @@ def get_user_campaigns(user_id):
 def export_ads(ad_ids):
     TEMP_PATH = os.getenv("TEMP_PATH")
     os.makedirs(TEMP_PATH, exist_ok=True)
-
     # create csv file
     csv_path = os.path.join(TEMP_PATH, "creatives.csv")
     with open(csv_path, "w", newline="", encoding="utf-8") as f:

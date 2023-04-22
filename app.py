@@ -54,7 +54,7 @@ def campaign():
     ads_format = data['ads_format']
     copies = data['copies']
     campaign_name = data['campaign_name']
-    campaign_urls = data.get('campaign_urls',[])
+    campaign_urls = data.get('urls',[])
     company_name= data['company_name']
     advertising_goal = data['advertising_goal']
     ad_tone= data['ad_tone']
@@ -110,7 +110,6 @@ def regenerate_ad():
     ad_id = data.get('ad_id', '')
     return regenerate_ads(ad_id, data)
 
-
 @app.route("/adsgpt/regenerate/image", methods=['POST'])
 def regenerate_image():
     file = request.files['file']
@@ -153,7 +152,7 @@ def export():
         for campaign in campaigns:
             campaign_id = campaign['campaign_id']
             campaign_ad_ids = dynamo.get_all_ad_id(campaign_id)
-            ad_ids.extend(campaign_ad_ids)       
+            ad_ids.extend(campaign_ad_ids)    
     url = export_ads(ad_ids)
     return (json.dumps({"url": url}), 200)
 

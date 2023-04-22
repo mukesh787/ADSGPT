@@ -17,10 +17,13 @@ def use_key(api_key):
 
 def complete(prompt, temperature=0.0):
     messages = [dict({"role": "user", "content": prompt})]
+    max_tokens = get_token_count(messages)
+    print("max token is ", max_tokens)
     kwargs = dict(
         model = 'gpt-3.5-turbo',
         temperature = temperature,
         messages = messages,
+        max_tokens = max_tokens,
         n = 1,
     )
     response = openai.ChatCompletion.create(**kwargs)
