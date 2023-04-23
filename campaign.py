@@ -56,7 +56,6 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                     
                     print(campaign_urls)
                     if len(campaign_urls) > 0:
-                        print("campaign urls ", campaign_urls)
                         file_name = str(uuid.uuid4()) + ".png"
                         filename = secure_filename(file_name)
                         path = os.path.join("/", os.getenv("TEMP_PATH"), filename)
@@ -155,14 +154,13 @@ def upload_files(files):
     return urls
 
 def regenerate_images(file):
-    print("file is ", file)
     temp_path = os.getenv("TEMP_PATH")
     new_file_name = file.filename.split(".")[0] + ".png"
     filename = secure_filename(new_file_name)
     path = os.path.join("/", temp_path, filename)
     file.save(path)
     square_image(path)
-    edit_image(path)
+    return edit_image(path)
     
 def edit_image(path):
     url = model.edit_image(path)
