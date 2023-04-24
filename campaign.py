@@ -98,7 +98,6 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
         response = model.generate_image(advertising_goal, images['resolution'], images['count'])
         url = response['data'][0]['url']
     
-    print("url is", url)
     object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
     s3_url = upload_image(object_name, url)
 
@@ -128,7 +127,6 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
 
 def generate_copy(company_name, advertising_goal, objective, description, ads_tone, query):
     prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, query)
-    print("Text Prompt size ", len(prompt))
     response = model.complete(prompt, 0.3)
     copy = response['choices'][0]['message']['content'].replace('"', '')
     copy = re.sub(' +', ' ', copy)
@@ -139,7 +137,6 @@ def get_cta(company_name, advertising_goal, objective, description, cta_list):
     prompt = model.resolve_cta_prompt(company_name, advertising_goal, objective, description, cta_list, query)
     response = model.complete(prompt, 0.0)
     cta_text = response['choices'][0]['message']['content']
-    print("CTA text is ", cta_text)
     for cta in cta_list:
         if cta_text.find(cta) > 0:
             return cta
@@ -151,9 +148,7 @@ def upload_image(object_name, url):
     return url
 
 def get_campaign_ads(campaign_id):
-    ads = dynamo.get_all_campaign_ads(campaign_id)
-    print("ads")
-    print(ads)
+    ads = dynamo.get_all_campaign_ads(campaign_id) 
     campaigns = dynamo.get_campaign_details(campaign_id)
     result = []
     for ad in ads['Items']:

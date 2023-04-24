@@ -86,7 +86,6 @@ def delete_campaign_ads():
     dynamo.delete_ad(ad_id, campaign_id)
     return (json.dumps({"status": "success"}), 200)
     
-    
 @app.route("/adsgpt/campaign/images", methods=['POST'])
 def update_campaign():
     files = request.files.getlist("file")
