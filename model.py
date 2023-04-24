@@ -29,17 +29,15 @@ def resolve_cta_prompt(company_name, ads_goal, objective, problem, cta, query):
     prompt = template.format(company_name=company_name, ads_goal=ads_goal, objective=objective, problem=problem, cta=cta, query=query)
     return prompt
     
-def regenerate_ad_copies(old_headline, new_headline, limit):
+def regenerate_ad_copies(new_headline, limit):
     use_key(None)
     prompt = f"""
-        {'I want you to act as ads copywriting expert,'}
-        
-        Based on your previous response, users wants few modifications on the ads copy, your previous response was {old_headline}
-        
+        {'I want you to act as ads copywriting expert '}
+                
         Generate a new ad copy based on this instuction {new_headline}, but the generated copy should be within {limit} characters limit
         
         Answer:"""
-    response = ai.complete(prompt)
+    response = ai.complete(prompt, temperature=0.3)
     return response
     
 

@@ -139,6 +139,7 @@ def campaign_details():
     response = dynamo.get_campaign_details(campaign_id)
     return json.dumps({"campaign": response['Items'][0]})
 
+
 @app.route("/adsgpt/export/zip", methods=['POST'])
 def export():
     request_args = request.args

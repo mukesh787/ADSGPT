@@ -122,19 +122,17 @@ def regenerate_ads(ad_id, data):
         if 'headline' in data:
             new_headline = data['headline']
             creatives = json.loads(item['creatives'])
-            old_headline = creatives['headline']
-            response = model.regenerate_ad_copies(old_headline, new_headline, 27)
+            response = model.regenerate_ad_copies(new_headline, 27)
             text  = response['choices'][0]['message']['content']
             creatives['headline'] = text
-            return (json.dumps({"headline": text, "old_headline": old_headline}), 200)
+            return (json.dumps({"headline": text}), 200)
         elif 'text' in data:
             new_text = data['text']
             creatives = json.loads(item['creatives'])
-            old_text = creatives['text']
-            response = model.regenerate_ad_copies(old_text, new_text, 125)
+            response = model.regenerate_ad_copies(new_text, 127)
             text  = response['choices'][0]['message']['content']
             creatives['text'] = text
-            return (json.dumps({"text": text, "old_text": old_text}), 200)
+            return (json.dumps({"text": text}), 200)
         else:
             print("regenerate image url")
             
