@@ -3,7 +3,7 @@ from flask import json, Flask, request
 from flask_cors import CORS, cross_origin
 import logging
 import dynamo
-from campaign import create_campaign, get_campaign_ads, regenerate_ads, upload_files, regenerate_images, get_user_campaigns, export_ads, update_ads
+from campaign import create_campaign, get_campaign_ads, regenerate_ads, upload_files, regenerate_images, get_user_campaigns, export_ads, update_ads, edit_campaign
 import datetime
 
 app = Flask(__name__)
@@ -70,7 +70,21 @@ def update_campaign_attr():
     data = request.get_json()
     campaign_id = data['campaign_id']
     campaign_name = data['campaign_name']
-    dynamo.update_campaign(campaign_id, campaign_name)
+    objective=data.get('objective', "")
+    ads_platform=data.get('ads_platform', "")
+    description=data.get('description', "")
+    ads_format=data.get('ads_format', "")
+    copies=data.get('copies', "")
+    campaign_urls=data.get('urls', [])
+    company_name=data.get('company_name', "")
+    advertising_goal=data.get('advertising_goal', "")
+    ad_tone=data.get('ad_tone', "")
+    image_variations_count=data.get('image_variations_count', "")
+    landing_page_url=data.get('landing_page_url', "")
+    logo_url=data.get('logo_url', "")
+    
+    edit_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
+    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
     response= dynamo.get_campaign_details(campaign_id)
     for item in  response['Items']:
         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
