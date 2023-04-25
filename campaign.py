@@ -29,54 +29,6 @@ def load_ads_config():
         print(data)
     return data
 
-# def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
-#                     campaign_urls, company_name, advertising_goal, 
-#                     ads_tone, image_variations_count, landing_page_url, logo_url):
-#     config_yaml = load_ads_config()
-#     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
-#                                          company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url)
-    
-#     for item in config_yaml['ads_config']:
-#         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
-#             for _ in range(0, copies):             
-#                 ads = item['ads']
-  
-#                 headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
-                
-#                 print("description count ", headline, len(headline))
-                
-#                 text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
-                
-#                 print("text count ", text, len(text))
-                
-#                 cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
-                
-#                 for _ in range(0, image_variations_count):
-#                     ad_id = str(uuid.uuid4())
-#                     images = item['images']
-                    
-#                     print(campaign_urls)
-#                     if len(campaign_urls) > 0:
-#                         file_name = str(uuid.uuid4()) + ".png"
-#                         filename = secure_filename(file_name)
-#                         path = os.path.join("/", os.getenv("TEMP_PATH"), filename)
-#                         response = urllib.request.urlretrieve(campaign_urls[0], path)
-#                         path = response[0]
-#                         square_image(path)
-#                         url = edit_image(path)
-#                     else:
-#                         response = model.generate_image(advertising_goal, images['resolution'], images['count'])
-#                         url = response['data'][0]['url']
-
-#                     print("url is ", url)
-#                     object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
-#                     s3_url = upload_image(object_name, url)
-                    
-#                     if s3_url:
-#                         creatives = dict({"text": text, "headline": headline, "cta": cta_text, "url": s3_url})
-#                         dynamo.create_ads(ad_id, campaign_id, creatives)
-#             return campaign_id
-
 def process_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name):
     ads = item['ads']
     headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
@@ -109,10 +61,9 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
                     campaign_urls, company_name, advertising_goal, 
                     ads_tone, image_variations_count, landing_page_url, logo_url):
+    
     config_yaml = load_ads_config()
-    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
-                                         company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url)
-
+    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url)
     processes = []
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
@@ -125,6 +76,25 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
         p.join()
 
     return campaign_id
+
+def edit_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
+    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url):
+    
+    config_yaml = load_ads_config()
+    dynamo.update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
+    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
+    processes = []
+    for item in config_yaml['ads_config']:
+        if (item['Platform'] == ads_platform and item['Format'] == ads_format):
+            for _ in range(0, copies*image_variations_count):
+                p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name))
+                processes.append(p)
+                p.start()
+
+    for p in processes:
+        p.join()
+
+
 
 def generate_copy(company_name, advertising_goal, objective, description, ads_tone, query):
     prompt = model.resolve_copy_prompt(company_name, advertising_goal, objective, description, ads_tone, query)
