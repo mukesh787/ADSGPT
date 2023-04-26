@@ -206,6 +206,23 @@ def delete_ad(ad_id, campaign_id):
         }
     )
     
+def delete_ads_by_campaign_id(campaign_id):
+    
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    response = ads_table.query(
+        IndexName='campaign_id-index',
+        KeyConditionExpression=Key('campaign_id').eq(campaign_id)
+    )
+    
+    for item in response['Items']:
+        ads_table.delete_item(
+            Key={
+                "ad_id": item["ad_id"],
+                "campaign_id": item["campaign_id"]
+            }
+        )
+    
     
     
 
