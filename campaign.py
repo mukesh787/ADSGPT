@@ -57,7 +57,6 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
 
     if s3_url:
         creatives = dict({"text": text, "headline": headline, "cta": cta_text, "url": s3_url})
-        print("inside this", s3_url)
         dynamo.create_ads(ad_id, campaign_id, creatives)
 
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
@@ -86,7 +85,7 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
     dynamo.update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
     if copies is not None and image_variations_count is not None:
-        dynamo.delete_ads_by_campaign_id(campaign_id)
+        #dynamo.delete_ads_by_campaign_id(campaign_id)
         processes = []
         for item in config_yaml['ads_config']:
             if (item['Platform'] == ads_platform and item['Format'] == ads_format):

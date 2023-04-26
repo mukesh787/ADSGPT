@@ -88,7 +88,7 @@ def update_campaign_attr():
     response= dynamo.get_campaign_details(campaign_id)
     for item in  response['Items']:
         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
-        item['ads'] = ads['Items']  
+        item['ads'] = ads['Items']
     sorted_items = sorted(response['Items'], key=lambda x: datetime.datetime.strptime(x.get('updated_ts', '1970-01-01 00:00:00'), '%Y-%m-%d %H:%M:%S'), reverse=True)
     return (json.dumps({"campaign": sorted_items}), 200)
 
