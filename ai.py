@@ -8,6 +8,12 @@ import tiktoken
 import openai
 import timeit
 
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)
+
 def get_token_count(text):
     tokens = num_tokens_from_messages(text)
     return tokens
@@ -15,6 +21,7 @@ def get_token_count(text):
 def use_key(api_key):
     openai.api_key = api_key
 
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def complete(prompt, temperature=0.0):
     messages = [dict({"role": "user", "content": prompt})]
     max_tokens = get_token_count(messages)
@@ -56,7 +63,8 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
         return num_tokens
     else:
         raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}""")
-    
+
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def generate_image(prompt, resolution, n):
     kwargs = dict(
         prompt = prompt,

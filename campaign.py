@@ -52,9 +52,12 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
     
     object_name = ad_id + "_" +campaign_name.lower().replace(" ", "") + ".png"
     s3_url = upload_image(object_name, url)
+    
+    print(s3_url)
 
     if s3_url:
         creatives = dict({"text": text, "headline": headline, "cta": cta_text, "url": s3_url})
+        print("inside this", s3_url)
         dynamo.create_ads(ad_id, campaign_id, creatives)
 
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
