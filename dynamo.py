@@ -109,25 +109,24 @@ def update_campaign(campaign_id, campaign_name, objective, ads_platform, descrip
     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
+    update_dict = {}
+    for key, value in {'campaign_name': campaign_name, 'objective': objective, 'ads_platform': ads_platform, 
+                      'description': description, 'ads_format': ads_format, 'copies': copies, 
+                      'campaign_urls': campaign_urls, 'company_name': company_name, 
+                      'advertising_goal': advertising_goal, 'ad_tone': ad_tone, 
+                      'image_variations_count': image_variations_count, 'landing_page_url': landing_page_url, 
+                      'logo_url': logo_url}.items():
+        
+        if value is not None and value != '':
+            update_dict[key] = {'Value': value, 'Action': 'PUT'}
+    
+    update_dict['updated_ts'] = {'Value': datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') , 'Action': 'PUT'}
+
     response = campaign_table.update_item(
         Key={'campaign_id': campaign_id},
-        AttributeUpdates = {
-            'campaign_name': {'Value': campaign_name, 'Action': 'PUT'},
-            'campaign_name': {'Value': campaign_name, 'Action': 'PUT'},
-            'objective': {'Value': objective, 'Action': 'PUT'},
-            'ads_platform': {'Value': ads_platform, 'Action': 'PUT'},
-            'description': {'Value': description, 'Action': 'PUT'},
-            'ads_format': {'Value': ads_format, 'Action': 'PUT'},
-            'copies': {'Value': copies, 'Action': 'PUT'},
-            'campaign_urls': {'Value': campaign_urls, 'Action': 'PUT'},
-            'advertising_goal': {'Value': advertising_goal, 'Action': 'PUT'},
-            'ad_tone': {'Value': ad_tone, 'Action': 'PUT'},
-            'image_variations_count': {'Value': image_variations_count, 'Action': 'PUT'},
-            'landing_page_url': {'Value': landing_page_url, 'Action': 'PUT'},
-            'logo_url': {'Value': logo_url, 'Action': 'PUT'},
-            'updated_ts': {'Value': datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') , 'Action': 'PUT'}
-        }
+        AttributeUpdates=update_dict
     )
+   
 
 def fetch_user_campaigns(user_id):
     dynamodb = dynamo_connect()

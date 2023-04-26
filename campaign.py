@@ -82,16 +82,17 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
     config_yaml = load_ads_config()
     dynamo.update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
-    processes = []
-    for item in config_yaml['ads_config']:
-        if (item['Platform'] == ads_platform and item['Format'] == ads_format):
-            for _ in range(0, copies*image_variations_count):
-                p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name))
-                processes.append(p)
-                p.start()
+    if copies is not None and image_variations_count is not None:
+        processes = []
+        for item in config_yaml['ads_config']:
+            if (item['Platform'] == ads_platform and item['Format'] == ads_format):
+                for _ in range(0, copies*image_variations_count):
+                    p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name))
+                    processes.append(p)
+                    p.start()
 
-    for p in processes:
-        p.join()
+        for p in processes:
+            p.join()
 
 
 
