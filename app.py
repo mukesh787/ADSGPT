@@ -157,19 +157,13 @@ def campaign_details():
 def export():
     request_args = request.args
     if request_args and 'ad_id' in request_args:
-       ad_ids = [request_args['ad_id']]
-    if request_args and 'user_id' in request_args:
-        user_id= request_args['user_id']
-        campaigns = get_user_campaigns(user_id)
-        ad_ids=[]
-        for campaign in campaigns:
-            campaign_id = campaign['campaign_id']
-            campaign_ad_ids = dynamo.get_all_ad_id(campaign_id)
-            ad_ids.extend(campaign_ad_ids)    
+       ad_ids = [request_args['ad_id']]  
+    if request_args and 'campaign_id' in request_args:
+       campaign_id = request_args['campaign_id']
+       ad_ids= dynamo.get_all_ad_id(campaign_id)
     url = export_ads(ad_ids)
     return (json.dumps({"url": url}), 200)
 
-    
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=8888, debug=True)
   
