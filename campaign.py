@@ -83,7 +83,8 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
     config_yaml = load_ads_config()
     dynamo.update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
-    if copies is not None and image_variations_count is not None:
+    
+    if copies and image_variations_count:
         dynamo.delete_ads_by_campaign_id(campaign_id)
         processes = []
         for item in config_yaml['ads_config']:
