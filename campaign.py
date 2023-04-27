@@ -219,7 +219,6 @@ def export_ads(ad_ids):
             writer.writerow([
                 creatives_dict["headline"].replace('"', ''),
                 creatives_dict["text"].replace('"', ''),
-                creatives_dict["description"].replace('"', ''),
                 creatives_dict.get("cta", "").replace('"', '')
             ])
             
