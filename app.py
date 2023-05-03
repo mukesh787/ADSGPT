@@ -61,8 +61,9 @@ def campaign():
     image_variations_count = data['image_variations_count']
     landing_page_url = data['landing_page_url']
     logo_url = data.get('logo_url',"")
+    image_text=data.get('image_text',"")
     campaign_id = create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
-                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
+                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text)
     return (json.dumps({"campaign_id": campaign_id}), 200)
 
 @app.route("/adsgpt/campaign", methods=['PUT'])
