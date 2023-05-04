@@ -83,9 +83,9 @@ def update_campaign_attr():
     image_variations_count=data.get('image_variations_count', "")
     landing_page_url=data.get('landing_page_url', "")
     logo_url=data.get('logo_url', "")
-    
+    image_text=data.get('image_text',"")
     edit_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
-    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
+    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text)
     response= dynamo.get_campaign_details(campaign_id)
     for item in  response['Items']:
         ads = dynamo.get_all_campaign_ads(item['campaign_id'])

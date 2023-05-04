@@ -64,7 +64,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                     ads_tone, image_variations_count, landing_page_url, logo_url, image_text):
     
     config_yaml = load_ads_config()
-    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url)
+    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url, image_text)
     processes = []
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
@@ -79,11 +79,10 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
     return campaign_id
 
 def edit_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
-    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url):
+    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text):
     
     config_yaml = load_ads_config()
-    dynamo.update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
-    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url)
+    dynamo.update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text)
     
     if copies and image_variations_count:
         dynamo.delete_ads_by_campaign_id(campaign_id)
@@ -91,7 +90,7 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
         for item in config_yaml['ads_config']:
             if (item['Platform'] == ads_platform and item['Format'] == ads_format):
                 for _ in range(0, copies*image_variations_count):
-                    p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name))
+                    p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text))
                     processes.append(p)
                     p.start()
 
