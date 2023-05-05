@@ -18,3 +18,14 @@ ads_config:
     images:
       resolution: 1024x1024
       type: JPG
+  -
+    Platform: Meta/Instagram
+    Format: carousel
+    ads:
+      text: "Generate ad copies for facebook news feed primary text within 125 characters"
+      headline: "Generate ad copies for facebook news feed description within 40 characters"
+    images:
+      resolution: 1024x1024
+      type: JPG
+      count: 1
+  

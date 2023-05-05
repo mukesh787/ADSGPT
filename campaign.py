@@ -58,10 +58,34 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
     if s3_url:
         creatives = dict({"text": text, "headline": headline, "cta": cta_text, "url": s3_url})
         dynamo.create_ads(ad_id, campaign_id, creatives)
+        
+        
+def process_carousel_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, cards):
+    ads = item['ads']
+    headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
+    cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
+    images = item['images']
+    ad_id = str(uuid.uuid4())
+    carousel_cards = []
+    for i in range(cards):
+        text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
+        response = model.generate_image(image_text, images['resolution'], images['count'])
+        url = response['data'][0]['url']
+        object_name = ad_id + "_" + campaign_name.lower().replace(" ", "") + f"_card{i+1}.png"
+        s3_url = upload_image(object_name, url)
+        if s3_url:
+            card = dict({"text": text, "image_url": s3_url})
+            carousel_cards.append(card)
+        print(s3_url)
+
+    if len(carousel_cards) >= 2:
+        creatives = dict({"headline": headline, "cta": cta_text, "cards": carousel_cards})
+        dynamo.create_ads(ad_id, campaign_id, creatives)
+
 
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
                     campaign_urls, company_name, advertising_goal, 
-                    ads_tone, image_variations_count, landing_page_url, logo_url, image_text):
+                    ads_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card ):
     
     config_yaml = load_ads_config()
     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url, image_text)
@@ -69,9 +93,13 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
             for _ in range(0, copies*image_variations_count):
-                p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text))
+                if ads_format == 'carousel':
+                    p = multiprocessing.Process(target=process_carousel_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card))
+                else:
+                    p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text))
                 processes.append(p)
                 p.start()
+                p.join()
 
     for p in processes:
         p.join()
