@@ -42,7 +42,8 @@ def get_user(email):
     return response['Items']
 
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
-                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text):
+                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text,
+                    carousel_card):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     campaign_id = str(uuid.uuid4())
@@ -64,6 +65,7 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
             'landing_page_url' : landing_page_url,
             'logo_url':logo_url,
             'image_text':image_text,
+            'carousel_card':carousel_card,
             'created_ts':datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
             'updated_ts':datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') 
         }
@@ -107,7 +109,7 @@ def get_ads(ad_id):
     return response
 
 def update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
-    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text):
+    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     update_dict = {}
@@ -116,7 +118,7 @@ def update_campaign(campaign_id, campaign_name, objective, ads_platform, descrip
                       'campaign_urls': campaign_urls, 'company_name': company_name, 
                       'advertising_goal': advertising_goal, 'ad_tone': ad_tone, 
                       'image_variations_count': image_variations_count, 'landing_page_url': landing_page_url, 
-                      'logo_url': logo_url, 'image_text':image_text}.items():
+                      'logo_url': logo_url, 'image_text':image_text, 'carousel_card':carousel_card}.items():
         
         if value is not None and value != '':
             update_dict[key] = {'Value': value, 'Action': 'PUT'}
