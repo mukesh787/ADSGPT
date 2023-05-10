@@ -28,7 +28,7 @@ ads_config:
       resolution: 1024x1024
       type: JPG
       count: 1
-   -
+  -
     Platform: Facebook
     Format: Facebook Stories
     ads:

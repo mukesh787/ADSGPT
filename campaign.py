@@ -143,6 +143,8 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
                 for _ in range(0, copies*image_variations_count):
                     if ads_format == 'carousel':
                         p = multiprocessing.Process(target=process_carousel_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card))
+                    elif ads_format=='Facebook Stories':
+                        p = multiprocessing.Process(target=process_facebook_stories, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text))
                     else:
                         p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text))
                     processes.append(p)
