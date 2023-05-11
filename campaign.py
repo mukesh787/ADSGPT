@@ -60,29 +60,51 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
         dynamo.create_ads(ad_id, campaign_id, creatives)
         
         
+# def process_carousel_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, cards):
+#     ads = item['ads']
+    # headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
+    # cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
+#     images = item['images']
+#     ad_id = str(uuid.uuid4())
+#     carousel_cards = []
+#     for i in range(cards):
+#         text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
+#         response = model.generate_image(image_text, images['resolution'], images['count'])
+#         url = response['data'][0]['url']
+#         object_name = ad_id + "_" + campaign_name.lower().replace(" ", "") + f"_card{i+1}.png"
+#         s3_url = upload_image(object_name, url)
+#         if s3_url:
+#             card = dict({"text": text, "image_url": s3_url})
+#             carousel_cards.append(card)
+#         print(s3_url)
+
+#     if len(carousel_cards) >= 2:
+#         creatives = dict({"headline": headline, "cta": cta_text, "cards": carousel_cards})
+#         dynamo.create_ads(ad_id, campaign_id, creatives)
+
+
 def process_carousel_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, cards):
     ads = item['ads']
-    headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
-    cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
+    text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
     images = item['images']
     ad_id = str(uuid.uuid4())
     carousel_cards = []
     for i in range(cards):
-        text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
+        headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
+        cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
         response = model.generate_image(image_text, images['resolution'], images['count'])
         url = response['data'][0]['url']
         object_name = ad_id + "_" + campaign_name.lower().replace(" ", "") + f"_card{i+1}.png"
         s3_url = upload_image(object_name, url)
         if s3_url:
-            card = dict({"text": text, "image_url": s3_url})
+            card = dict({"headline": headline, "cta": cta_text, "image_url": s3_url})  # Add headline and CTA text for each card
             carousel_cards.append(card)
         print(s3_url)
 
     if len(carousel_cards) >= 2:
-        creatives = dict({"headline": headline, "cta": cta_text, "cards": carousel_cards})
+        creatives = dict({"text": text ,"cards": carousel_cards})
         dynamo.create_ads(ad_id, campaign_id, creatives)
-        
-        
+     
 def process_facebook_stories(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text):
     ads = item['ads']
     headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
@@ -109,6 +131,9 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                     ads_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card ):
     
     config_yaml = load_ads_config()
+    if ads_format == 'carousel':
+        # Set image variations count to 1 for carousel ads
+        image_variations_count = 1
     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card)
     processes = []
     for item in config_yaml['ads_config']:
@@ -134,6 +159,10 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
     
     config_yaml = load_ads_config()
     dynamo.update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card)
+    
+    if ads_format == 'carousel':
+        # Set image variations count to 1 for carousel ads
+        image_variations_count = 1
     
     if copies and image_variations_count:
         dynamo.delete_ads_by_campaign_id(campaign_id)
