@@ -29,7 +29,7 @@ ads_config:
       type: JPG
       count: 1
   -
-    Platform: Facebook
+    Platform: Meta/Instagram
     Format: Facebook Stories
     ads:
       text: "Generate ad copies for facebook news feed primary text within 125 characters"
