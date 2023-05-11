@@ -58,7 +58,7 @@ def campaign():
     company_name= data['company_name']
     advertising_goal = data['advertising_goal']
     ad_tone= data['ad_tone']
-    image_variations_count = data['image_variations_count']
+    image_variations_count = data.get('image_variations_count',"")
     landing_page_url = data['landing_page_url']
     logo_url = data.get('logo_url',"")
     image_text=data.get('image_text',"")
