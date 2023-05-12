@@ -164,7 +164,9 @@ def export():
     if request_args and 'campaign_id' in request_args:
        campaign_id = request_args['campaign_id']
        ad_ids= dynamo.get_all_ad_id(campaign_id)
-    url = export_ads(ad_ids)
+    if request_args and 'ads_format' in request_args:
+        ads_format = request_args['ads_format']
+    url = export_ads(ad_ids, ads_format)
     return (json.dumps({"url": url}), 200)
 
 if __name__ == "__main__":

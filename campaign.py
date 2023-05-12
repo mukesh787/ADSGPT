@@ -37,16 +37,6 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
     
     ad_id = str(uuid.uuid4())
     images = item['images']
-    
-    # if len(campaign_urls) > 0:
-    #     file_name = str(uuid.uuid4()) + ".png"
-    #     filename = secure_filename(file_name)
-    #     path = os.path.join("/", os.getenv("TEMP_PATH"), filename)
-    #     response = urllib.request.urlretrieve(campaign_urls[0], path)
-    #     path = response[0]
-    #     square_image(path)
-    #     url = edit_image(path)
-    # else:
     response = model.generate_image(image_text, images['resolution'], images['count'])
     url = response['data'][0]['url']
     
@@ -58,30 +48,6 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
     if s3_url:
         creatives = dict({"text": text, "headline": headline, "cta": cta_text, "url": s3_url})
         dynamo.create_ads(ad_id, campaign_id, creatives)
-        
-        
-# def process_carousel_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, cards):
-#     ads = item['ads']
-    # headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
-    # cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
-#     images = item['images']
-#     ad_id = str(uuid.uuid4())
-#     carousel_cards = []
-#     for i in range(cards):
-#         text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
-#         response = model.generate_image(image_text, images['resolution'], images['count'])
-#         url = response['data'][0]['url']
-#         object_name = ad_id + "_" + campaign_name.lower().replace(" ", "") + f"_card{i+1}.png"
-#         s3_url = upload_image(object_name, url)
-#         if s3_url:
-#             card = dict({"text": text, "image_url": s3_url})
-#             carousel_cards.append(card)
-#         print(s3_url)
-
-#     if len(carousel_cards) >= 2:
-#         creatives = dict({"headline": headline, "cta": cta_text, "cards": carousel_cards})
-#         dynamo.create_ads(ad_id, campaign_id, creatives)
-
 
 def process_carousel_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, cards):
     ads = item['ads']
@@ -287,33 +253,62 @@ def get_user_campaigns(user_id):
     return sorted_items
         
 
-def export_ads(ad_ids):
+def export_ads(ad_ids, ads_format):
     TEMP_PATH = os.getenv("TEMP_PATH")
     os.makedirs(TEMP_PATH, exist_ok=True)
-    # create csv file
-    csv_path = os.path.join(TEMP_PATH, "creatives.csv")
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["headline", "text", "description", "cta"])
+    if ads_format == "NewsFeed":
+        # create csv file
+        csv_path = os.path.join(TEMP_PATH, "creatives.csv")
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["headline", "text", "description", "cta"])
+            for ad_id in ad_ids:
+                creatives = dynamo.get_creatives_ads(ad_id)
+                creatives_dict = json.loads(creatives)
+                writer.writerow([
+                    creatives_dict["headline"].replace('"', ''),
+                    creatives_dict["text"].replace('"', ''),
+                    creatives_dict.get("cta", "").replace('"', '')
+                ])
+                
+        # download images
+        image_paths = []
         for ad_id in ad_ids:
             creatives = dynamo.get_creatives_ads(ad_id)
             creatives_dict = json.loads(creatives)
-            writer.writerow([
-                creatives_dict["headline"].replace('"', ''),
-                creatives_dict["text"].replace('"', ''),
-                creatives_dict.get("cta", "").replace('"', '')
-            ])
-            
-    # download images
-    image_paths = []
-    for ad_id in ad_ids:
-        creatives = dynamo.get_creatives_ads(ad_id)
-        creatives_dict = json.loads(creatives)
-        image_url = creatives_dict["url"]
-        image_path = os.path.join(TEMP_PATH, os.path.basename(image_url))
-        urllib.request.urlretrieve(image_url, image_path)
-        image_paths.append(image_path)
-
+            image_url = creatives_dict["url"]
+            image_path = os.path.join(TEMP_PATH, os.path.basename(image_url))
+            urllib.request.urlretrieve(image_url, image_path)
+            image_paths.append(image_path)
+               
+    elif ads_format == "carousel":
+        # create csv file
+        csv_path = os.path.join(TEMP_PATH, "creatives.csv")
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["text", "headline", "cta"])
+            for ad_id in ad_ids:
+                creatives = dynamo.get_creatives_ads(ad_id)
+                creatives_dict = json.loads(creatives)
+                carousel_cards = creatives_dict.get("cards")
+                for card in carousel_cards:
+                    writer.writerow([
+                        creatives_dict["text"].replace('"', ''),
+                        card["headline"].replace('"', ''),
+                        card.get("cta", "").replace('"', ''),
+                    ])
+        # download images
+        image_paths = []
+        for ad_id in ad_ids:
+            creatives = dynamo.get_creatives_ads(ad_id)
+            creatives_dict = json.loads(creatives)
+            carousel_cards = creatives_dict.get("cards")
+            for i, card in enumerate(carousel_cards):
+                image_url = card["image_url"]
+                image_path = os.path.join(TEMP_PATH, f"{os.path.basename(image_url)}_{i+1}")
+                urllib.request.urlretrieve(image_url, image_path)
+                image_paths.append(image_path)
+                
     # create zip file
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     campaign_id = dynamo.get_campaign_id(ad_ids[0])
@@ -329,7 +324,7 @@ def export_ads(ad_ids):
 
     # delete temporary folder
     shutil.rmtree(TEMP_PATH)
-
+        
     print(f"Successfully created zip file: {zip_path}")
     zip_url = s3.upload_zip_to_s3(zip_name)
     return zip_url
