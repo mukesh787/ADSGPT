@@ -246,10 +246,38 @@ def square_image(path):
     
 def get_user_campaigns(user_id):
     response = dynamo.fetch_user_campaigns(user_id)
+    new_items=[]
     for item in  response['Items']:
         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
-        item['ads'] = ads['Items']  
-    sorted_items = sorted(response['Items'], key=lambda x: datetime.datetime.strptime(x.get('updated_ts', '1970-01-01 00:00:00'), '%Y-%m-%d %H:%M:%S'), reverse=True)
+        item['ads'] = ads['Items']
+        format = [{
+            'ads': item['ads'],
+            'ad_tone':item['ad_tone'],
+            'ads_format': item['ads_format'],
+            'ads_platform': item['ads_platform'],
+            'advertising_goal': item['advertising_goal'],
+            'campaign_urls': item['campaign_urls'],
+            'carousel_card': item['carousel_card'],
+            'company_name': item['company_name'],
+            'copies': item['copies'],
+            'description': item['description'],
+            'image_text': item['image_text'],
+            'image_variations_count': item['image_variations_count'],
+            'landing_page_url': item['landing_page_url'],
+            'logo_url': item['logo_url'],
+            'objective': item['objective']
+        }]
+        
+        new_item = {
+            'campaign_id': item['campaign_id'],
+            'user_id': user_id,
+            'campaign_name': item['campaign_name'],
+            'format': format,
+            'created_ts':item['created_ts'],
+            'updated_ts':item['updated_ts'],
+        }
+        new_items.append(new_item) 
+    sorted_items = sorted(new_items, key=lambda x: datetime.datetime.strptime(x.get('updated_ts', '1970-01-01 00:00:00'), '%Y-%m-%d %H:%M:%S'), reverse=True)
     return sorted_items
         
 
