@@ -309,6 +309,31 @@ def export_ads(ad_ids, ads_format):
                 urllib.request.urlretrieve(image_url, image_path)
                 image_paths.append(image_path)
                 
+    else:
+        # create csv file
+        csv_path = os.path.join(TEMP_PATH, "creatives.csv")
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["headline", "text"])
+            for ad_id in ad_ids:
+                creatives = dynamo.get_creatives_ads(ad_id)
+                creatives_dict = json.loads(creatives)
+                writer.writerow([
+                    creatives_dict["headline"].replace('"', ''),
+                    creatives_dict["text"].replace('"', ''),
+                ])
+                
+        # download images
+        image_paths = []
+        for ad_id in ad_ids:
+            creatives = dynamo.get_creatives_ads(ad_id)
+            creatives_dict = json.loads(creatives)
+            image_url = creatives_dict["url"]
+            image_path = os.path.join(TEMP_PATH, os.path.basename(image_url))
+            urllib.request.urlretrieve(image_url, image_path)
+            image_paths.append(image_path)
+        
+                
     # create zip file
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     campaign_id = dynamo.get_campaign_id(ad_ids[0])
