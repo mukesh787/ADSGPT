@@ -29,7 +29,7 @@ def load_ads_config():
         print(data)
     return data
 
-def process_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text):
+def process_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url):
     ads = item['ads']
     headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
     text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
@@ -47,9 +47,9 @@ def process_ads(config_yaml, item, company_name, advertising_goal, objective, de
 
     if s3_url:
         creatives = dict({"text": text, "headline": headline, "cta": cta_text, "url": s3_url})
-        dynamo.create_ads(ad_id, campaign_id, creatives)
+        dynamo.create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls )
 
-def process_carousel_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, cards):
+def process_carousel_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, cards, ads_format, copies, image_variations_count, landing_page_url, logo_url):
     ads = item['ads']
     text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
     images = item['images']
@@ -69,9 +69,9 @@ def process_carousel_ads(config_yaml, item, company_name, advertising_goal, obje
 
     if len(carousel_cards) >= 2:
         creatives = dict({"text": text ,"cards": carousel_cards})
-        dynamo.create_ads(ad_id, campaign_id, creatives)
+        dynamo.create_ads(ad_id, campaign_id, creatives,image_text, cards, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls)
      
-def process_facebook_stories(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text):
+def process_facebook_stories(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url):
     ads = item['ads']
     headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
     text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
@@ -89,7 +89,7 @@ def process_facebook_stories(config_yaml, item, company_name, advertising_goal, 
 
     if s3_url:
         creatives = dict({"text": text, "headline": headline,  "url": s3_url})
-        dynamo.create_ads(ad_id, campaign_id, creatives)
+        dynamo.create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls)
         
         
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
@@ -100,17 +100,17 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
     if ads_format == 'carousel':
         # Set image variations count to 1 for carousel ads
         image_variations_count = 1
-    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,company_name, advertising_goal, ads_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card)
+    campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform,campaign_name,company_name, advertising_goal, ads_tone,)
     processes = []
     for item in config_yaml['ads_config']:
         if (item['Platform'] == ads_platform and item['Format'] == ads_format):
             for _ in range(0, copies*image_variations_count):
                 if ads_format == 'carousel':
-                    p = multiprocessing.Process(target=process_carousel_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card))
+                    p = multiprocessing.Process(target=process_carousel_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                 elif ads_format=='Facebook Stories':
-                    p = multiprocessing.Process(target=process_facebook_stories, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text))
+                    p = multiprocessing.Process(target=process_facebook_stories, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                 else:
-                    p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text))
+                    p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                 processes.append(p)
                 p.start()
                 p.join()
@@ -246,40 +246,18 @@ def square_image(path):
     
 def get_user_campaigns(user_id):
     response = dynamo.fetch_user_campaigns(user_id)
-    new_items=[]
     for item in  response['Items']:
-        ads = dynamo.get_all_campaign_ads(item['campaign_id'])
-        item['ads'] = ads['Items']
-        format = [{
-            'ads': item['ads'],
-            'ad_tone':item['ad_tone'],
-            'ads_format': item['ads_format'],
-            'ads_platform': item['ads_platform'],
-            'advertising_goal': item['advertising_goal'],
-            'campaign_urls': item['campaign_urls'],
-            'carousel_card': item['carousel_card'],
-            'company_name': item['company_name'],
-            'copies': item['copies'],
-            'description': item['description'],
-            'image_text': item['image_text'],
-            'image_variations_count': item['image_variations_count'],
-            'landing_page_url': item['landing_page_url'],
-            'logo_url': item['logo_url'],
-            'objective': item['objective']
-        }]
-        
-        new_item = {
-            'campaign_id': item['campaign_id'],
-            'user_id': user_id,
-            'campaign_name': item['campaign_name'],
-            'format': format,
-            'created_ts':item['created_ts'],
-            'updated_ts':item['updated_ts'],
-        }
-        new_items.append(new_item) 
-    sorted_items = sorted(new_items, key=lambda x: datetime.datetime.strptime(x.get('updated_ts', '1970-01-01 00:00:00'), '%Y-%m-%d %H:%M:%S'), reverse=True)
+         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+         ad_groups = {}
+         for ad in ads['Items']:
+            format = ad.get('ads_format', 'Unknown')
+            if format not in ad_groups:
+                ad_groups[format] = []
+            ad_groups[format].append(ad)
+         item['ad_groups'] = ad_groups
+         
+    sorted_items = sorted(response['Items'], key=lambda x: datetime.datetime.strptime(x.get('updated_ts', '1970-01-01 00:00:00'), '%Y-%m-%d %H:%M:%S'), reverse=True)
     return sorted_items
-        
 
 def export_ads(ad_ids, ads_format):
     TEMP_PATH = os.getenv("TEMP_PATH")

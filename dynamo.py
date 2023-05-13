@@ -41,9 +41,7 @@ def get_user(email):
     )
     return response['Items']
 
-def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, campaign_urls,
-                    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text,
-                    carousel_card):
+def create_campaign(user_id, objective, description, ads_platform, campaign_name, company_name, advertising_goal, ad_tone):
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     campaign_id = str(uuid.uuid4())
@@ -55,31 +53,33 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
             'objective': objective,
             'ads_platform': ads_platform,
             'description': description,
-            'ads_format': ads_format,
-            'copies': copies,
-            'campaign_urls': campaign_urls,
             'company_name': company_name,
             'advertising_goal' :advertising_goal,
             'ad_tone':ad_tone,
-            'image_variations_count':image_variations_count,
-            'landing_page_url' : landing_page_url,
-            'logo_url':logo_url,
-            'image_text':image_text,
-            'carousel_card':carousel_card,
             'created_ts':datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
             'updated_ts':datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') 
         }
     )
     return campaign_id
 
-def create_ads(ad_id, campaign_id, creatives):
+def create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls):
     dynamodb = dynamo_connect()
     ads_table = dynamodb.Table("ads")
     ads_table.put_item(
         Item = {
             'ad_id': ad_id,
             'campaign_id': campaign_id,
-            'creatives': json.dumps(creatives)
+            'creatives': json.dumps(creatives),
+            'image_text':image_text,
+            'carousel_card':carousel_card,
+            'image_text':image_text,
+            'carousel_card':carousel_card,
+            'copies': copies,
+            'campaign_urls': campaign_urls,
+            'image_variations_count':image_variations_count,
+            'landing_page_url' : landing_page_url,
+            'logo_url':logo_url, 
+            'ads_format':ads_format
         }
     )
     
