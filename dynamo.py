@@ -108,17 +108,14 @@ def get_ads(ad_id):
     )
     return response
 
-def update_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
-    company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card):
+def update_campaign(campaign_id, campaign_name, objective, ads_platform, description,  company_name, advertising_goal, ad_tone):
+    print("update call")
     dynamodb = dynamo_connect()
     campaign_table = dynamodb.Table("campaign")
     update_dict = {}
     for key, value in {'campaign_name': campaign_name, 'objective': objective, 'ads_platform': ads_platform, 
-                      'description': description, 'ads_format': ads_format, 'copies': copies, 
-                      'campaign_urls': campaign_urls, 'company_name': company_name, 
-                      'advertising_goal': advertising_goal, 'ad_tone': ad_tone, 
-                      'image_variations_count': image_variations_count, 'landing_page_url': landing_page_url, 
-                      'logo_url': logo_url, 'image_text':image_text, 'carousel_card':carousel_card}.items():
+                      'description': description, 'company_name': company_name, 
+                      'advertising_goal': advertising_goal, 'ad_tone': ad_tone}.items():
         
         if value is not None and value != '':
             update_dict[key] = {'Value': value, 'Action': 'PUT'}
@@ -225,6 +222,41 @@ def delete_ads_by_campaign_id(campaign_id):
                 "campaign_id": item["campaign_id"]
             }
         )
+        
+        
+def get_ads_format_for_campaign(campaign_id):
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    response = ads_table.query(
+        IndexName='campaign_id-index',
+        KeyConditionExpression=Key('campaign_id').eq(campaign_id)
+    )
+    if response['Count'] == 0:
+        return None
+    else:
+        ads_format_set = set()
+        for item in response['Items']:
+            ads_format_set.add(item['ads_format'])
+            print("ads format")
+        return ads_format_set
+    
+def delete_ads_by_campaign_id(campaign_id, formats_to_delete):
+    
+    dynamodb = dynamo_connect()
+    ads_table = dynamodb.Table("ads")
+    response = ads_table.query(
+        IndexName='campaign_id-index',
+        KeyConditionExpression=Key('campaign_id').eq(campaign_id)
+    )
+    
+    for item in response['Items']:
+        if item['ads_format'] in formats_to_delete:
+            ads_table.delete_item(
+                Key={
+                    "ad_id": item["ad_id"],
+                    "campaign_id": item["campaign_id"]
+                }
+            )
     
     
     
