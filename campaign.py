@@ -249,17 +249,11 @@ def square_image(path):
     
 def get_user_campaigns(user_id):
     response = dynamo.fetch_user_campaigns(user_id)
-    for item in  response['Items']:
-         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
-         ad_groups = {}
-         for ad in ads['Items']:
-            format = ad.get('ads_format', 'Unknown')
-            if format not in ad_groups:
-                ad_groups[format] = []
-            ad_groups[format].append(ad)
-         item['ad_groups'] = ad_groups
-         
-    sorted_items = sorted(response['Items'], key=lambda x: datetime.datetime.strptime(x.get('updated_ts', '1970-01-01 00:00:00'), '%Y-%m-%d %H:%M:%S'), reverse=True)
+    for item in response['Items']:
+        ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+        formats = ads['Items']
+        item['formats'] = formats
+    sorted_items = sorted(response['Items'], key=lambda x: x.get('updated_ts', '1970-01-01 00:00:00'), reverse=True)
     return sorted_items
 
 def export_ads(ad_ids, ads_format):
