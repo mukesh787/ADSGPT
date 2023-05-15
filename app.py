@@ -88,7 +88,13 @@ def update_campaign_attr():
     carousel_card=data.get('carousel_card', "")
     edit_campaign(campaign_id, campaign_name, objective, ads_platform, description, ads_format, copies, campaign_urls, 
     company_name, advertising_goal, ad_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card)
-    return (json.dumps({"status": "success"}), 200)
+    response= dynamo.get_campaign_details(campaign_id)
+    for item in response['Items']:
+        ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+        formats = ads['Items']
+        item['formats'] = formats
+    sorted_items = sorted(response['Items'], key=lambda x: x.get('updated_ts', '1970-01-01 00:00:00'), reverse=True)
+    return (json.dumps({"campaign": sorted_items}), 200)
 
 @app.route("/adsgpt/delete/ad", methods=['DELETE'])
 def delete_campaign_ads():
