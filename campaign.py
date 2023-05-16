@@ -253,14 +253,7 @@ def regenerate_ads(ad_id, data):
             
             else:
                 print("regenerate image url")
-                        
-                
-            
-            
-            
-            
-            
-                        
+                                        
 def get_ads_config(campaign):
     config_yaml = load_ads_config()
     config = filter(lambda config : config['Platform'] == campaign['ads_platform'] and config['Format'] == campaign['ads_format'], config_yaml)
@@ -275,14 +268,24 @@ def upload_files(files):
         urls.append(url)
     return urls
 
-def regenerate_images(file):
+def regenerate_images(file, ad_id, card_index):
     temp_path = os.getenv("TEMP_PATH")
     new_file_name = file.filename.split(".")[0] + ".png"
     filename = secure_filename(new_file_name)
     path = os.path.join("/", temp_path, filename)
     file.save(path)
     square_image(path)
-    return edit_image(path)
+    url =edit_image(path)
+    response = dynamo.get_ads(ad_id)
+    if len(response['Items']) > 0:
+        item = response['Items'][0]
+        ads_format=item['ads_format']
+        creatives = json.loads(item['creatives'])
+        if ads_format == 'carousel':
+            creatives['cards'][card_index]['image_url'] = url
+        else:
+            creatives['url']=url
+    return url
     
 def edit_image(path):
     url = model.edit_image(path)
