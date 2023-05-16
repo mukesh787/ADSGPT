@@ -362,14 +362,38 @@ def update_ads(ad_id, data):
     if len(response['Items']) > 0:
         item = response['Items'][0]
         campaign_id = item['campaign_id']
-        new_text = data['text']
-        headline = data['headline']
-        new_url= data['url']
-        new_cta=data['cta']
+        ads_format=item['ads_format']
         creatives = json.loads(item['creatives'])
-        creatives['text'] = new_text
-        creatives['headline'] = headline
-        creatives['url'] = new_url
-        creatives['cta'] = new_cta
-        dynamo.create_ads(ad_id, campaign_id, creatives)
+        if ads_format == "NewsFeed":
+            new_text = data['text']
+            headline = data['headline']
+            new_url= data['url']
+            new_cta=data['cta']
+            creatives['text'] = new_text
+            creatives['headline'] = headline
+            creatives['url'] = new_url
+            creatives['cta'] = new_cta
+         
+        elif ads_format == "Facebook Stories":  
+            new_text = data['text']
+            headline = data['headline']
+            new_url= data['url']
+            creatives['text'] = new_text
+            creatives['headline'] = headline
+            creatives['url'] = new_url
+            
+        else:
+            new_text = data['text']
+            new_card= data['cards']
+            creatives['text'] = new_text
+            creatives['cards'] = new_card
+            
+        image_text=item.get('image_text',"")
+        carousel_card=item.get('carousel_card',"")
+        copies=item.get('copies',"")
+        image_variations_count=item.get('image_variations_count',"")
+        landing_page_url=item.get('landing_page_url',"")
+        logo_url=item.get('logo_url',"")
+        campaign_urls=item.get('campaign_urls',"")
+        dynamo.create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls)
         return (json.dumps({"message": "updated successfully"}), 200)
