@@ -308,7 +308,7 @@ def export_ads(ad_ids, ads_format):
             carousel_cards = creatives_dict.get("cards")
             for i, card in enumerate(carousel_cards):
                 image_url = card["image_url"]
-                image_path = os.path.join(TEMP_PATH, f"{os.path.basename(image_url)}_{i+1}")
+                image_path = os.path.join(TEMP_PATH, f"{os.path.basename(image_url)}")
                 urllib.request.urlretrieve(image_url, image_path)
                 image_paths.append(image_path)
                 
