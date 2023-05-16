@@ -193,22 +193,72 @@ def regenerate_ads(ad_id, data):
     response = dynamo.get_ads(ad_id)
     if len(response['Items']) > 0:
         item = response['Items'][0]
-        if 'headline' in data:
-            new_headline = data['headline']
-            creatives = json.loads(item['creatives'])
-            response = model.regenerate_ad_copies(new_headline, 27)
-            text  = response['choices'][0]['message']['content']
-            creatives['headline'] = text
-            return (json.dumps({"headline": text}), 200)
-        elif 'text' in data:
-            new_text = data['text']
-            creatives = json.loads(item['creatives'])
-            response = model.regenerate_ad_copies(new_text, 127)
-            text  = response['choices'][0]['message']['content']
-            creatives['text'] = text
-            return (json.dumps({"text": text}), 200)
+        ads_format=item['ads_format']
+        if ads_format=="NewsFeed":
+            if 'headline' in data:
+                new_headline = data['headline']
+                creatives = json.loads(item['creatives'])
+                response = model.regenerate_ad_copies(new_headline, 27)
+                text  = response['choices'][0]['message']['content']
+                creatives['headline'] = text
+                return (json.dumps({"headline": text}), 200)
+            elif 'text' in data:
+                new_text = data['text']
+                creatives = json.loads(item['creatives'])
+                response = model.regenerate_ad_copies(new_text, 127)
+                text  = response['choices'][0]['message']['content']
+                creatives['text'] = text
+                return (json.dumps({"text": text}), 200)
+            else:
+                print("regenerate image url")
+        elif ads_format == 'Facebook Stories':
+            if 'headline' in data:
+                new_headline = data['headline']
+                creatives = json.loads(item['creatives'])
+                response = model.regenerate_ad_copies(new_headline, 40)
+                text  = response['choices'][0]['message']['content']
+                creatives['headline'] = text
+                return (json.dumps({"headline": text}), 200)
+            elif 'text' in data:
+                new_text = data['text']
+                creatives = json.loads(item['creatives'])
+                response = model.regenerate_ad_copies(new_text, 125)
+                text  = response['choices'][0]['message']['content']
+                creatives['text'] = text
+                return (json.dumps({"text": text}), 200)
+            
+            else:
+                print("regenerate image url")
+            
         else:
-            print("regenerate image url")
+            if 'text' in data:
+                new_text = data['text']
+                creatives = json.loads(item['creatives'])
+                response = model.regenerate_ad_copies(new_text, 125)
+                text  = response['choices'][0]['message']['content']
+                creatives['text'] = text
+                return (json.dumps({"text": text}), 200)
+            
+            elif 'headline' in data and 'index' in data:
+                creatives = json.loads(item['creatives'])
+                for index, card in enumerate(creatives):
+                    new_headline = data['headline']
+                    card_index = data['index']
+                    if card_index == index:
+                        response = model.regenerate_ad_copies(new_headline, 40) 
+                        headline = response['choices'][0]['message']['content']
+                        creatives['cards'][card_index]['headline'] = headline
+                
+                return (json.dumps({"headline": headline}), 200)
+            
+            else:
+                print("regenerate image url")
+                        
+                
+            
+            
+            
+            
             
                         
 def get_ads_config(campaign):
