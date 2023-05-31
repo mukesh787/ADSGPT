@@ -75,6 +75,7 @@ def process_facebook_stories(config_yaml, item, company_name, advertising_goal, 
     ads = item['ads']
     headline = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline'])
     text = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['text'])
+    cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
     
     ad_id = str(uuid.uuid4())
     images = item['images']
@@ -88,7 +89,7 @@ def process_facebook_stories(config_yaml, item, company_name, advertising_goal, 
     print(s3_url)
 
     if s3_url:
-        creatives = dict({"text": text, "headline": headline,  "url": s3_url})
+        creatives = dict({"text": text, "headline": headline, "cta": cta_text,  "url": s3_url})
         dynamo.create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls)
         
         
@@ -377,6 +378,7 @@ def export_ads(ad_ids, ads_format):
                 writer.writerow([
                     creatives_dict["headline"].replace('"', ''),
                     creatives_dict["text"].replace('"', ''),
+                    creatives_dict.get("cta", "").replace('"', '')
                 ])
                 
         # download images
@@ -434,6 +436,7 @@ def update_ads(ad_id, data):
             creatives['text'] = new_text
             creatives['headline'] = headline
             creatives['url'] = new_url
+            creatives['cta'] = new_cta
             
         else:
             new_text = data['text']
