@@ -10,6 +10,8 @@ from langchain import OpenAI, ConversationChain, LLMChain, PromptTemplate
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import load_prompt
 
+IMAGE_PROMPT = "Do not create any copy or words as part of your imagery."
+
 def use_key(api_key):
     api_key = os.getenv("OPENAI_KEY")
     ai.use_key(api_key)
@@ -43,7 +45,7 @@ def regenerate_ad_copies(new_headline, limit):
 
 def generate_image(prompt, resolution, n):
     use_key(None)
-    response = ai.generate_image(prompt, resolution, n)
+    response = ai.generate_image(prompt + "." + IMAGE_PROMPT, resolution, n)
     print(response)
     return response
 
