@@ -81,8 +81,7 @@ def create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_for
             'logo_url':logo_url, 
             'ads_format':ads_format
         }
-    )
-    
+    )  
 def get_all_campaign_ads(campaign_id):
     dynamodb = dynamo_connect()
     ads_table = dynamodb.Table("ads")

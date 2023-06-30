@@ -92,12 +92,24 @@ def process_facebook_stories(config_yaml, item, company_name, advertising_goal, 
         creatives = dict({"text": text, "headline": headline, "cta": cta_text,  "url": s3_url})
         dynamo.create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls)
         
-        
+def process_text_ads(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url):
+    ads = item['ads']
+    headline1 = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline1'])
+    headline2 = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline2'])
+    headline3 = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['headline3'])
+    description1 = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['description1'])
+    description2 = generate_copy(company_name, advertising_goal, objective, description, ads_tone, ads['description2'])
+    cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
+    ad_id = str(uuid.uuid4())
+    creatives = dict({"headline1": headline1, "headline2": headline2, "headline3": headline3, "description1": description1, "description2": description2 , "cta": cta_text})
+    dynamo.create_ads(ad_id, campaign_id, creatives,image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls)
+       
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
                     campaign_urls, company_name, advertising_goal, 
                     ads_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card ):
     
     config_yaml = load_ads_config()
+
     if ads_format == 'carousel':
         # Set image variations count to 1 for carousel ads
         image_variations_count = 1
@@ -110,8 +122,10 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                     p = multiprocessing.Process(target=process_carousel_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                 elif ads_format=='Facebook Stories':
                     p = multiprocessing.Process(target=process_facebook_stories, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
-                else:
+                elif ads_format=='NewsFeed':
                     p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
+                elif ads_format=='Text':
+                    p = multiprocessing.Process(target=process_text_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text,carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                 processes.append(p)
                 p.start()
                 p.join()
@@ -144,7 +158,7 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
                         p = multiprocessing.Process(target=process_carousel_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                     elif ads_format=='Facebook Stories':
                         p = multiprocessing.Process(target=process_facebook_stories, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
-                    else:
+                    elif ads_format=='NewsFeed':
                         p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                     processes.append(p)
                     p.start()
@@ -366,7 +380,7 @@ def export_ads(ad_ids, ads_format):
                 urllib.request.urlretrieve(image_url, image_path)
                 image_paths.append(image_path)
                 
-    else:
+    elif ads_format == "Facebook Stories":
         # create csv file
         csv_path = os.path.join(TEMP_PATH, "creatives.csv")
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
@@ -390,7 +404,33 @@ def export_ads(ad_ids, ads_format):
             image_path = os.path.join(TEMP_PATH, os.path.basename(image_url))
             urllib.request.urlretrieve(image_url, image_path)
             image_paths.append(image_path)
-        
+
+    elif ads_format == "Text":
+         # create csv file
+        csv_path = os.path.join(TEMP_PATH, "creatives.csv")
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["headline1", "headline2", "headline3", "description1", "description2", "cta"])
+            for ad_id in ad_ids:
+                creatives = dynamo.get_creatives_ads(ad_id)
+                creatives_dict = json.loads(creatives)
+                writer.writerow([
+                    creatives_dict["headline1"].replace('"', ''),
+                    creatives_dict["headline2"].replace('"', ''),
+                    creatives_dict["headline3"].replace('"', ''),
+                    creatives_dict["description1"].replace('"', ''),
+                    creatives_dict["description2"].replace('"', ''),
+                    creatives_dict.get("cta", "").replace('"', '')
+                ])   
+        # download images
+        # image_paths = []
+        # for ad_id in ad_ids:
+        #     creatives = dynamo.get_creatives_ads(ad_id)
+        #     creatives_dict = json.loads(creatives)
+        #     image_url = creatives_dict["url"]
+        #     image_path = os.path.join(TEMP_PATH, os.path.basename(image_url))
+        #     urllib.request.urlretrieve(image_url, image_path)
+        #     image_paths.append(image_path)
                 
     # create zip file
     today = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -402,8 +442,11 @@ def export_ads(ad_ids, ads_format):
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
         folder_name =  f"{campaign_name}_{today}"
         zipf.write(csv_path, os.path.join(folder_name, os.path.basename(csv_path)))
-        for image_path in image_paths:
-            zipf.write(image_path, os.path.join(folder_name, os.path.basename(image_path)))
+        if ads_format == "Text":
+            pass
+        else:
+            for image_path in image_paths:
+                zipf.write(image_path, os.path.join(folder_name, os.path.basename(image_path)))
 
     # delete temporary folder
     shutil.rmtree(TEMP_PATH)

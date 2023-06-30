@@ -1,6 +1,5 @@
 ads_config:
-  -
-    Platform: Meta/Instagram
+  - Platform: Meta/Instagram
     Format: NewsFeed
     ads:
       text: "Generate ad copy for facebook news feed description within 15 words"
@@ -9,8 +8,7 @@ ads_config:
       resolution: 1024x1024
       type: JPG
       count: 1
-  -
-    Platform: Google
+  - Platform: Google
     Format: NewsFeed
     ads:
       text: "Generate ad copies for facebook news feed primary text within 125 characters"
@@ -18,8 +16,7 @@ ads_config:
     images:
       resolution: 1024x1024
       type: JPG
-  -
-    Platform: Meta/Instagram
+  - Platform: Meta/Instagram
     Format: carousel
     ads:
       text: "Generate ad copy for facebook news feed description within 15 words"
@@ -28,8 +25,7 @@ ads_config:
       resolution: 1024x1024
       type: JPG
       count: 1
-  -
-    Platform: Meta/Instagram
+  - Platform: Meta/Instagram
     Format: Facebook Stories
     ads:
       text: "Generate ad copy for facebook news feed description within 15 words"
@@ -38,4 +34,11 @@ ads_config:
       resolution: 1024x1024
       type: JPG
       count: 1
-  
+  - Platform: Google
+    Format: Text
+    ads:
+      headline1: "Generate ad copy for Google text ad headline within 30 characters"
+      headline2: "Generate ad copy for Google text ad headline within 30 characters"
+      headline3: "Generate ad copy for Google text ad headline within 30 characters"
+      description1: "Generate ad copy for Google text ad  description within 90 characters"
+      description2: "Generate ad copy for Google text ad  description within 90 characters"
