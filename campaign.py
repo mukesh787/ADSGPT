@@ -113,6 +113,9 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
     if ads_format == 'carousel':
         # Set image variations count to 1 for carousel ads
         image_variations_count = 1
+    if ads_format == 'Text':
+        # Set image variations count to 1 for Text
+        image_variations_count = 1
     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform,campaign_name,company_name, advertising_goal, ads_tone,)
     processes = []
     for item in config_yaml['ads_config']:
