@@ -147,7 +147,9 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
     if ads_format == 'carousel':
         # Set image variations count to 1 for carousel ads
         image_variations_count = 1
-    
+    if ads_format == 'Text':
+        # Set image variations count to 1 for Text
+        image_variations_count = 1
     if copies and image_variations_count:
         existing_formats = dynamo.get_ads_format_for_campaign(campaign_id)
         formats_to_delete = [format for format in existing_formats if format == ads_format]
@@ -163,6 +165,8 @@ def edit_campaign(campaign_id, campaign_name, objective, ads_platform, descripti
                         p = multiprocessing.Process(target=process_facebook_stories, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                     elif ads_format=='NewsFeed':
                         p = multiprocessing.Process(target=process_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
+                    elif ads_format=='Text': 
+                        p = multiprocessing.Process(target=process_text_ads, args=(config_yaml, item, company_name, advertising_goal, objective, description, ad_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url))
                     processes.append(p)
                     p.start()
                     p.join()
@@ -320,12 +324,21 @@ def square_image(path):
     
 def get_user_campaigns(user_id):
     response = dynamo.fetch_user_campaigns(user_id)
+    # meta_ads=dynamo.get_all_meta_ads(user_id,"Meta/Instagram")
+    # google_ads=dynamo.get_all_google_ads(user_id,"Google")
     for item in response['Items']:
-        ads = dynamo.get_all_campaign_ads(item['campaign_id'])
-        formats = ads['Items']
-        item['formats'] = formats
+            ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+            for it in ads['Items']:
+                if(it['ads_format']=='Text'):
+                    it['ads_platform']='Google'
+                else:
+                    it['ads_platform']='Meta/Instagram'
+            formats = ads['Items']
+            item['formats'] = formats
     sorted_items = sorted(response['Items'], key=lambda x: x.get('updated_ts', '1970-01-01 00:00:00'), reverse=True)
     return sorted_items
+
+    
 
 def export_ads(ad_ids, ads_format):
     TEMP_PATH = os.getenv("TEMP_PATH")
@@ -484,12 +497,26 @@ def update_ads(ad_id, data):
             creatives['url'] = new_url
             creatives['cta'] = new_cta
             
-        else:
+        elif ads_format == "Carousel":
             new_text = data['text']
             new_card= data['cards']
             creatives['text'] = new_text
             creatives['cards'] = new_card
-            
+
+        elif ads_format == "Text":
+            new_headline1 = data['headline1']
+            new_headline2 = data['headline2']
+            new_headline3 = data['headline3']
+            new_description1 = data['description1']
+            new_description2 = data['description2']
+            new_cta = data['cta']
+            creatives['headline1'] = new_headline1
+            creatives['headline2'] = new_headline2
+            creatives['headline3'] = new_headline3
+            creatives['description1'] = new_description1
+            creatives['description2'] = new_description2
+            creatives['cta'] = new_cta
+          
         image_text=item.get('image_text',"")
         carousel_card=item.get('carousel_card',"")
         copies=item.get('copies',"")
