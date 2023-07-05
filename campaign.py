@@ -492,6 +492,7 @@ def update_ads(ad_id, data):
             new_text = data['text']
             headline = data['headline']
             new_url= data['url']
+            new_cta=data['cta']
             creatives['text'] = new_text
             creatives['headline'] = headline
             creatives['url'] = new_url
