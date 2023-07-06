@@ -91,11 +91,6 @@ def update_campaign_attr():
     response= dynamo.get_campaign_details(campaign_id)
     for item in response['Items']:
         ads = dynamo.get_all_campaign_ads(item['campaign_id'])
-        for it in ads['Items']:
-                if(it['ads_format']=='Text'):
-                    it['ads_platform']='Google'
-                else:
-                    it['ads_platform']='Meta/Instagram'
         formats = ads['Items']
         item['formats'] = formats
     sorted_items = sorted(response['Items'], key=lambda x: x.get('updated_ts', '1970-01-01 00:00:00'), reverse=True)

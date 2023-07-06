@@ -62,7 +62,7 @@ def create_campaign(user_id, objective, description, ads_platform, campaign_name
     )
     return campaign_id
 
-def create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls):
+def create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls,ads_platform):
     dynamodb = dynamo_connect()
     ads_table = dynamodb.Table("ads")
     ads_table.put_item(
@@ -79,7 +79,8 @@ def create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_for
             'image_variations_count':image_variations_count,
             'landing_page_url' : landing_page_url,
             'logo_url':logo_url, 
-            'ads_format':ads_format
+            'ads_format':ads_format,
+            'ads_platform':ads_platform
         }
     )  
 def get_all_campaign_ads(campaign_id):
