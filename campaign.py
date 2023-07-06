@@ -498,7 +498,7 @@ def update_ads(ad_id, data):
             creatives['url'] = new_url
             creatives['cta'] = new_cta
             
-        elif ads_format == "Carousel":
+        elif ads_format == "carousel":
             new_text = data['text']
             new_card= data['cards']
             creatives['text'] = new_text
