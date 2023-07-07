@@ -156,7 +156,12 @@ def campaign_details():
     if request_args and 'campaign_id' in request_args:
         campaign_id = request_args['campaign_id']
     response = dynamo.get_campaign_details(campaign_id)
-    return json.dumps({"campaign": response['Items'][0]})
+    for item in response['Items']:
+        ads = dynamo.get_all_campaign_ads(item['campaign_id'])
+        formats = ads['Items']
+        item['formats'] = formats
+    sorted_items = sorted(response['Items'], key=lambda x: x.get('updated_ts', '1970-01-01 00:00:00'), reverse=True)
+    return (json.dumps({"campaign": sorted_items}), 200)
 
 
 @app.route("/adsgpt/export/zip", methods=['POST'])
