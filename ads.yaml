@@ -37,8 +37,8 @@ ads_config:
   - Platform: Google
     Format: Text
     ads:
-      headline1: "Generate ad copy for Google text ad headline within 30 characters"
-      headline2: "Generate ad copy for Google text ad headline within 30 characters"
-      headline3: "Generate ad copy for Google text ad headline within 30 characters"
-      description1: "Generate ad copy for Google text ad  description within 90 characters"
-      description2: "Generate ad copy for Google text ad  description within 90 characters"
+      headline1: "Generate ad copy for Google text ad headline within 3 to 5 words"
+      headline2: "Generate ad copy for Google text ad headline within 3 to 5 words"
+      headline3: "Generate ad copy for Google text ad headline within 3 to 5 words"
+      description1: "Generate ad copy for Google text ad  description within 15 words"
+      description2: "Generate ad copy for Google text ad  description within 15 words"

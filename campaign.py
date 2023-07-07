@@ -102,6 +102,7 @@ def process_text_ads(item, company_name, advertising_goal, objective, descriptio
     cta_text = get_cta(company_name, advertising_goal, objective, description, cta_list)
     ad_id = str(uuid.uuid4())
     creatives = dict({"headline1": headline1, "headline2": headline2, "headline3": headline3, "description1": description1, "description2": description2 , "cta": cta_text})
+    print(creatives)
     dynamo.create_ads(ad_id, campaign_id, creatives,image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls,ads_platform)
        
 def create_campaign(user_id, objective, description, ads_platform, ads_format, copies, campaign_name, 
@@ -252,7 +253,7 @@ def regenerate_ads(ad_id, data):
             else:
                 print("regenerate image url")
             
-        else:
+        elif ads_format == 'carousel':
             if 'text' in data:
                 new_text = data['text']
                 creatives = json.loads(item['creatives'])
@@ -275,6 +276,22 @@ def regenerate_ads(ad_id, data):
             
             else:
                 print("regenerate image url")
+        
+        elif ads_format == 'Text':
+            if 'headline' in data:
+                new_headline = data['headline']
+                creatives = json.loads(item['creatives'])
+                response = model.regenerate_ad_copies(new_headline, 30)
+                text  = response['choices'][0]['message']['content']
+                creatives['headline'] = text
+                return (json.dumps({"headline": text}), 200)
+            elif 'text' in data:
+                new_text = data['text']
+                creatives = json.loads(item['creatives'])
+                response = model.regenerate_ad_copies(new_text, 90)
+                text  = response['choices'][0]['message']['content']
+                creatives['text'] = text
+                return (json.dumps({"text": text}), 200)
                                         
 def get_ads_config(campaign):
     config_yaml = load_ads_config()
@@ -470,6 +487,7 @@ def update_ads(ad_id, data):
         item = response['Items'][0]
         campaign_id = item['campaign_id']
         ads_format=item['ads_format']
+        ads_platform=item['ads_platform']
         creatives = json.loads(item['creatives'])
         if ads_format == "NewsFeed":
             new_text = data['text']
@@ -518,5 +536,5 @@ def update_ads(ad_id, data):
         landing_page_url=item.get('landing_page_url',"")
         logo_url=item.get('logo_url',"")
         campaign_urls=item.get('campaign_urls',"")
-        dynamo.create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls)
+        dynamo.create_ads(ad_id, campaign_id, creatives, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url, campaign_urls,ads_platform)
         return (json.dumps({"message": "updated successfully"}), 200)
