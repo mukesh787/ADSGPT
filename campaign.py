@@ -110,30 +110,33 @@ def create_campaign(user_id, objective, description, ads_platform, ads_format, c
                     ads_tone, image_variations_count, landing_page_url, logo_url, image_text, carousel_card ):
     
     config_yaml = load_ads_config()
-
-    if ads_format == 'carousel':
-        # Set image variations count to 1 for carousel ads
-        image_variations_count = 1
-    if ads_format == 'Text':
-        # Set image variations count to 1 for Text
-        image_variations_count = 1
+    for item in ads_format:
+        if item == 'carousel':
+            # Set image variations count to 1 for carousel ads
+            image_variations_count = 1
+        if item == 'Text':
+            # Set image variations count to 1 for Text
+            image_variations_count = 1
     campaign_id = dynamo.create_campaign(user_id, objective, description, ads_platform,campaign_name,company_name, advertising_goal, ads_tone,)
     processes = []
+    p = None 
     for item in config_yaml['ads_config']:
-        if (item['Platform'] == ads_platform and item['Format'] == ads_format):
-            for _ in range(0, copies*image_variations_count):
-                if ads_format == 'carousel':
-                    p = multiprocessing.Process(target=process_carousel_ads, args=(item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
-                elif ads_format=='Facebook Stories':
-                    p = multiprocessing.Process(target=process_facebook_stories, args=(item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
-                elif ads_format=='NewsFeed':
-                    p = multiprocessing.Process(target=process_ads, args=( item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
-                elif ads_format=='Text':
-                    p = multiprocessing.Process(target=process_text_ads, args=( item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text,carousel_card, ads_format, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
-                processes.append(p)
-                p.start()
-                p.join()
-
+        if (item['Platform'] == ads_platform):
+            for it in ads_format:
+                if item['Format'] == it:
+                    for _ in range(0, copies*image_variations_count):
+                        if it == 'carousel':
+                            p = multiprocessing.Process(target=process_carousel_ads, args=(item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, it, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
+                        elif it=='Facebook Stories':
+                            p = multiprocessing.Process(target=process_facebook_stories, args=(item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, it, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
+                        elif it=='NewsFeed':
+                            p = multiprocessing.Process(target=process_ads, args=( item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text, carousel_card, it, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
+                        elif it=='Text':
+                            p = multiprocessing.Process(target=process_text_ads, args=( item, company_name, advertising_goal, objective, description, ads_tone, campaign_urls, cta_list, campaign_id, campaign_name, image_text,carousel_card, it, copies, image_variations_count, landing_page_url, logo_url,ads_platform))
+                        processes.append(p)
+                        p.start()
+                        p.join()
+    
     for p in processes:
         p.join()
 

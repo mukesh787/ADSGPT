@@ -51,7 +51,7 @@ def campaign():
     objective = data['objective']
     description = data['description']
     ads_platform = data['ads_platform']
-    ads_format = data['ads_format']
+    ads_format = data.get('ads_format',[])
     copies = data['copies']
     campaign_name = data['campaign_name']
     campaign_urls = data.get('urls',[])
