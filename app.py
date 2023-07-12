@@ -17,6 +17,7 @@ if __name__ != '__main__':
     
         
 @app.route("/adsgpt/signup", methods=['POST'])
+@cross_origin(origin='*')
 def signup():
     data = request.get_json()
     user_name = data['username']
@@ -28,6 +29,7 @@ def signup():
 
 
 @app.route("/adsgpt/login", methods=['POST'])
+@cross_origin(origin='*')
 def login():
     data = request.get_json()
     email = data['email']
