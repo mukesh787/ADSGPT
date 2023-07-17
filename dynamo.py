@@ -237,7 +237,7 @@ def get_ads_format_for_campaign(campaign_id):
         ads_format_set = set()
         for item in response['Items']:
             ads_format_set.add(item['ads_format'])
-            print("ads format")
+            print(ads_format_set)
         return ads_format_set
     
 def delete_ads_by_campaign_id(campaign_id, formats_to_delete):
