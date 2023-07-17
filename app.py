@@ -77,7 +77,7 @@ def update_campaign_attr():
     objective=data.get('objective', "")
     ads_platform=data.get('ads_platform', "")
     description=data.get('description', "")
-    ads_format=data.get('ads_format', "")
+    ads_format = data.get('ads_format',[])
     copies=data.get('copies', "")
     campaign_urls=data.get('urls', [])
     company_name=data.get('company_name', "")
